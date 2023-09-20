@@ -1,0 +1,10 @@
+Deux joueurs s'affrontent en face à face sur un même PC.
+	- Une base par joueur 
+	- 1 unité au début : coute 10 / rapporte 12 
+	- Une base a 1000PV 
+	
+	
+1 thread pour les joueurs (lecture clavier)
+1 thread pour la boucle de jeu
+Affichage du nombre d'unité déployée (nombre par joueur) + PV base + argent des joueurs
+
