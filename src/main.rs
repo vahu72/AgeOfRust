@@ -4,6 +4,7 @@ mod personnage;
 
 use personnage::MovingRect;
 
+#[macroquad::main("Background Image Example", window_conf)]
 async fn main() {
     let mut rectangles = Vec::new();
 
