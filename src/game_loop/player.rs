@@ -1,40 +1,91 @@
+use std::ops::Deref;
+
 mod entity;
+
+pub enum Side {
+    Left,
+    Right,
+}
 pub struct Player {
-    pub life_points: i32,
-    pub wallet: i32,
-    //direction edge,
+    pub money: i32,
+    pub side: Side,
+    pub health: i32,
+    pub entities: Vec<entity::Entity>,
 }
 
 impl Player {
-    pub fn new() -> Self {
+    pub fn new(side : Side) -> Player {
         Player {
-            life_points: 1000,
-            wallet: 1000,
+            money: 1000,
+            side : side,
+            health: 1000,
+            entities: Vec::new(),
         }
     }
 
+    pub fn get_money(&self) -> i32 {
+        self.money
+    }
+
+    pub fn get_health(&self) -> i32 {
+        self.health
+    }
+
+    pub fn get_side(&self) -> &Side {
+        &self.side
+    }
+
+    pub fn get_entities(&self) -> &Vec<entity::Entity> {
+        &self.entities
+    }
+
+    pub fn get_entity(&self, index : usize) -> &entity::Entity {
+        &self.entities[index]
+    }
+
+    pub fn get_entity_count(&self) -> usize {
+        self.entities.len()
+    }
+
+    pub fn get_entity_index_by_position(&self, position : i32) -> Option<usize> {
+        for (index, entity) in self.entities.iter().enumerate() {
+            if entity.get_position() == position {
+                return Some(index);
+            }
+        }
+        None
+    }
+
+    pub fn create_entity(&mut self, health : i32, damage : i32, direction : entity::Direction, cost : i32, revenue : i32, speed : i32, position : i32) {
+        self.entities.push(entity::Entity::new(health, damage, direction, cost, revenue, speed, position));
+
+    }
+
+    pub fn remove_entity(&mut self, index : usize) {
+        self.entities.remove(index);
+    }
+
     pub fn decrease_life(&mut self, amount: i32) {
-        self.life_points -= amount;
-        if self.life_points < 0 {
-            self.life_points = 0;
+        self.health -= amount;
+        if self.health < 0 {
+            self.health = 0;
             //TODO: notify death
         }
     }
 
-    fn increase_money(&mut self, amount: i32) {
-        self.wallet += amount;
-        if self.wallet < 0 {
-            self.wallet = 0;
-        }
+    pub fn increase_money(&mut self, amount: i32) {
+        self.money += amount;
     }
 
-    fn decrease_money(&mut self, amount: i32) -> bool {
-        if self.wallet > 0 {
-            self.wallet -= amount;
+    pub fn decrease_money(&mut self, amount: i32) -> bool {
+        if self.money > 0 {
+            self.money -= amount;
             true
         }
         else {
             false
         }
     }
+
+
 }
