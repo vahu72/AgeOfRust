@@ -1,4 +1,4 @@
-//mod personnages;
+mod entity;
 pub struct Player {
     pub life_points: i32,
     pub wallet: i32,
