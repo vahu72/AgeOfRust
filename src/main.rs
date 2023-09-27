@@ -1,19 +1,22 @@
 
-mod tasks;
+mod module_actif;
 
-use std::thread;
-use std::time::Duration;
 
 fn main() {
-    // Initialize and launch object1's thread
-    tasks::object1_start();
-
-    // Initialize and launch object2's thread
-    tasks::object2_start();
-
-    // Let the threads run for a while
-    thread::sleep(Duration::from_secs(5));
+    let (module_actif_handler, module_actif_sender) = module_actif::start();
+    module_actif::ask_action(&module_actif_sender);
+    module_actif::stop(module_actif_handler, &module_actif_sender);
 }
+
+
+
+
+
+
+
+
+
+
 
 //utilisation mutex :
 
