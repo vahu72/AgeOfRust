@@ -1,13 +1,13 @@
-mod gui;
-mod keyboard;
-mod player;
+pub mod gui;
+pub mod keyboard;
+pub mod player;
 
 use std::sync::mpsc;
 use std::thread;
 
 pub fn game_loop_start() -> (thread::JoinHandle<()>, mpsc::Sender<String>) {
     //Starting the keyboard module
-    let (keyboard_handler, keyboard_sender) = keyboard::keyboard_start();
+  //  let (keyboard_handler, keyboard_sender) = keyboard::keyboard_start();
 
     //Starting the game loop thread
     let (sender, receiver) = mpsc::channel();
