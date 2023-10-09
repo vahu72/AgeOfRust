@@ -22,7 +22,7 @@ async fn main() {
     loop {
         clear_background(WHITE);
 
-        if let Ok(key_code) = receiver.recv() {
+        if let Ok(key_code) = receiver.try_recv() {
             if key_code == KeyCode::Escape {
                 show_title = true;
             }
