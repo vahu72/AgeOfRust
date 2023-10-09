@@ -11,7 +11,7 @@ pub struct GameTimer {
 }
 
 impl GameTimer {
-    pub fn game_timer_new(interval_ms: u64, callback: Callback) -> Self {
+    pub fn new(interval_ms: u64, callback: Callback) -> Self {
         let interval = Duration::from_millis(interval_ms);
         GameTimer {
             interval,
@@ -20,7 +20,7 @@ impl GameTimer {
         }
     }
 
-    pub fn game_timer_start(&self) {
+    pub fn start(&self) {
         let interval = self.interval;
         let callback = self.callback;
         let is_running = self.is_running.clone();
@@ -43,7 +43,7 @@ impl GameTimer {
         });
     }
 
-    pub fn game_timer_stop(&self) {
+    pub fn stop(&self) {
         *self.is_running.lock().unwrap() = false;
     }
 }
