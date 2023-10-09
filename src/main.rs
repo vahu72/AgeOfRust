@@ -3,7 +3,7 @@ use macroquad::prelude::*;
 
 #[macroquad::main("Background Image Example", window_conf)]
 async fn main() {
-    let mut show_title = true; // Initial state: afficher la texture du titre
+    let mut running_game = false;
 
     // Créez un canal pour envoyer des événements de clavier et souris
     let (sender, receiver) = std::sync::mpsc::channel::<macroquad::input::KeyCode>();
@@ -24,17 +24,31 @@ async fn main() {
 
         if let Ok(key_code) = receiver.try_recv() {
             if key_code == KeyCode::Escape {
-                show_title = true;
+                println!("Escape pressed");
+
+                running_game = false;
+            }
+            else if key_code == KeyCode::Space {
+                println!("Space pressed");
+                running_game = true;
+            }
+            else if key_code == KeyCode::Left && running_game == true {
+                println!("Left pressed so print");
+                graphics_manager.draw_entity(true);
+            }
+            else if key_code == KeyCode::Right && running_game == true {
+                graphics_manager.draw_entity(false);
             }
         }
 
-        if show_title {
+        if running_game == false {
             // Dessinez la texture du titre
             graphics_manager.draw_title();
 
         } else {
             // Dessinez la texture d'arrière-plan
             graphics_manager.draw_background_game();
+            graphics_manager.draw_entity(false);
         }
 
         next_frame().await;

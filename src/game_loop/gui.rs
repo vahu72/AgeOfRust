@@ -1,6 +1,5 @@
-use std::sync::MutexGuard;
-use macroquad::input::{is_key_down, KeyCode};
 use macroquad::prelude::{load_texture, Texture2D};
+use macroquad::prelude::{draw_rectangle, RED, GREEN};
 pub struct GraphicsManager {
     pub main_menu: Texture2D,
     pub game_background: Texture2D,
@@ -53,5 +52,16 @@ impl GraphicsManager {
                 ..Default::default()
             },
         );
+    }
+
+    pub fn draw_entity(&self, side : bool) {
+        if (side == true) {
+            // Dessinez un rectangle rouge à gauche de l'écran dans le cas du joueur de gauche
+            draw_rectangle(0.0, 0.0, 100.0, 100.0, RED);
+        }
+        else {
+            // Dessinez un rectangle vert à droite de l'écran dans le cas du joueur de droite
+            draw_rectangle(0.0, 0.0, 100.0, 100.0, GREEN);
+        }
     }
 }
