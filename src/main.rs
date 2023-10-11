@@ -6,6 +6,8 @@ async fn main() {
     let mut running_game = false;
     let mut player_left = game_loop::player::Player::new(game_loop::player::Side::Left);
     let mut player_right = game_loop::player::Player::new(game_loop::player::Side::Right);
+    let mut last_left_spawn_time : f64 = 0.0;
+    let mut last_right_spawn_time : f64 = 0.0;
 
     // Créez un canal pour envoyer des événements de clavier et souris
     let (sender, receiver) = std::sync::mpsc::channel::<macroquad::input::KeyCode>();
@@ -23,6 +25,7 @@ async fn main() {
     println!("Starting loop");
     loop {
         clear_background(WHITE);
+        let current_time = macroquad::time::get_time();
 
         if let Ok(key_code) = receiver.try_recv() {
             if key_code == KeyCode::Escape {
@@ -34,10 +37,20 @@ async fn main() {
                 running_game = true;
             }
             else if key_code == KeyCode::Left && running_game == true {
-                player_left.create_entity(150, 100, game_loop::player::entity::Direction::Right, 100, 150, 1, 100);
+                let elapsed_time = current_time - last_left_spawn_time;
+                if elapsed_time >= 1.0 {
+                    player_left.create_entity(150, 100, game_loop::player::entity::Direction::Right, 100, 150, 1, 100);
+                    last_left_spawn_time = current_time;
+                }
+
             }
             else if key_code == KeyCode::Right && running_game == true {
-                player_right.create_entity(100, 100, game_loop::player::entity::Direction::Left, 100, 150, 1, 685);
+                let elapsed_time = current_time - last_right_spawn_time;
+                if elapsed_time >= 1.0 {
+                    player_right.create_entity(100, 100, game_loop::player::entity::Direction::Left, 100, 150, 1, 685);
+                    last_right_spawn_time = current_time;
+                }
+
             }
         }
 
@@ -57,16 +70,50 @@ async fn main() {
             // Dessinez les entités des deux joueurs
             for left_entity in player_left.entities.iter_mut() {
                 left_entity.set_position(left_entity.get_position() + left_entity.get_speed());
+
+                // Collision entre une entité du joueur de gauche et la base adverse
+                if left_entity.get_position() == 685 {
+                    println!("Collision avec la base de droite");
+                    // MAJ de la vie de l'entité concernée
+                    left_entity.set_health(0);
+                    // MAJ de la monnaie du joueur
+                    player_left.money += left_entity.get_revenue();
+                    // MAJ de la vie du joueur adverse
+                    if(player_right.health >= left_entity.get_damage()) {
+                        player_right.health -= left_entity.get_damage();
+                    } else {
+                        player_right.health = 0;
+                    }
+                }
+
                 graphics_manager.draw_entity(true, left_entity.get_position() as f32);
             }
 
             for right_entity in player_right.entities.iter_mut() {
                 right_entity.set_position(right_entity.get_position() - right_entity.get_speed());
+
+                // Collision entre une entité du joueur de droite et la base adverse
+                if right_entity.get_position() == 100 {
+                    println!("Collision avec la base de gauche");
+                    // MAJ de la vie de l'entité concernée
+                    right_entity.set_health(0);
+                    // MAJ de la monnaie du joueur
+                    player_right.money += right_entity.get_revenue();
+                    // MAJ de la vie du joueur adverse
+                    if(player_left.health >= right_entity.get_damage()) {
+                        player_left.health -= right_entity.get_damage();
+                    } else {
+                        player_left.health = 0;
+                    }
+                }
+
                 graphics_manager.draw_entity(false, right_entity.get_position() as f32);
             }
 
             for left_entity in player_left.entities.iter_mut() {
                 for right_entity in player_right.entities.iter_mut() {
+
+                    // Collision entre deux entités
                     if (left_entity.get_position() - right_entity.get_position()).abs() <= 1 {
                         println!("Collision");
                         // MAJ de la vie des deux entités
@@ -98,6 +145,10 @@ async fn main() {
                 }
                 to_retain
             });
+
+            if (player_right.get_health() <= 0 || player_left.get_health() <= 0)  {
+                running_game = false;
+            }
         }
         next_frame().await;
     }
