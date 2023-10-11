@@ -1,11 +1,11 @@
 
 
-
+#[derive(PartialEq)]
 pub enum Direction {
     Left,
     Right,
 }
-
+#[derive(PartialEq)]
 pub struct Entity {
     health : i32,
     damage : i32,
@@ -56,12 +56,12 @@ impl Entity {
         self.position
     }
 
-    pub fn set_health(&mut self, health : i32) {
-        self.health = health;
+    pub fn set_health(&mut self, new_health : i32) {
+        self.health = new_health;
     }
 
-    pub fn set_position(&mut self, position : i32) {
-        self.position = position;
+    pub fn set_position(&mut self, new_position : i32) {
+        self.position = new_position;
     }
 }
 

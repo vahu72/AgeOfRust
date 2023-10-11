@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-mod entity;
+pub mod entity;
 
 pub enum Side {
     Left,
@@ -16,7 +16,7 @@ pub struct Player {
 impl Player {
     pub fn new(side : Side) -> Player {
         Player {
-            money: 1000,
+            money: 250,
             side : side,
             health: 1000,
             entities: Vec::new(),
@@ -35,8 +35,8 @@ impl Player {
         &self.side
     }
 
-    pub fn get_entities(&self) -> &Vec<entity::Entity> {
-        &self.entities
+    pub fn get_entities(&mut self) -> &mut Vec<entity::Entity> {
+        &mut self.entities
     }
 
     pub fn get_entity(&self, index : usize) -> &entity::Entity {
@@ -57,12 +57,14 @@ impl Player {
     }
 
     pub fn create_entity(&mut self, health : i32, damage : i32, direction : entity::Direction, cost : i32, revenue : i32, speed : i32, position : i32) {
-        self.entities.push(entity::Entity::new(health, damage, direction, cost, revenue, speed, position));
-
+        if(self.money >= cost) {
+            self.entities.push(entity::Entity::new(health, damage, direction, cost, revenue, speed, position));
+            self.money -= cost;
+        }
     }
 
-    pub fn remove_entity(&mut self, index : usize) {
-        self.entities.remove(index);
+    pub fn remove_entity(&mut self, entity_to_remove : &entity::Entity) {
+        self.entities.retain(|entity| entity != entity_to_remove);
     }
 
     pub fn decrease_life(&mut self, amount: i32) {

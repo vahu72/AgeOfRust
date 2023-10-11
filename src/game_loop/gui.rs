@@ -1,5 +1,5 @@
 use macroquad::prelude::{load_texture, Texture2D};
-use macroquad::prelude::{draw_rectangle, RED, GREEN};
+use macroquad::prelude::{draw_rectangle, draw_text, RED, BLUE, BLACK};
 pub struct GraphicsManager {
     pub main_menu: Texture2D,
     pub game_background: Texture2D,
@@ -54,14 +54,30 @@ impl GraphicsManager {
         );
     }
 
-    pub fn draw_entity(&self, side : bool) {
+    pub fn draw_entity(&self, side : bool, position : f32) {
         if (side == true) {
             // Dessinez un rectangle rouge à gauche de l'écran dans le cas du joueur de gauche
-            draw_rectangle(0.0, 0.0, 100.0, 100.0, RED);
+            draw_rectangle(position, 505.0, 12.0, 50.0, RED);
         }
         else {
             // Dessinez un rectangle vert à droite de l'écran dans le cas du joueur de droite
-            draw_rectangle(0.0, 0.0, 100.0, 100.0, GREEN);
+            draw_rectangle(position, 505.0, 12.0, 50.0, BLUE);
         }
+    }
+
+    pub fn draw_money(&self, player_right_money : i32, player_left_money : i32) {
+        // Affichez la monnaie des deux joueurs
+        let money_right_message = format!("Money: {}$", player_right_money);
+        let money_left_message= format!("Money: {}$", player_left_money);
+        draw_text(&money_left_message, 10.0, 30.0, 30.0, BLACK);
+        draw_text(&money_right_message, 650.0, 30.0, 30.0, BLACK);
+    }
+
+    pub fn draw_health(&self, player_right_health : i32, player_left_health: i32) {
+        // Affichez la monnaie des deux joueurs
+        let health_right_message = format!("Health: {}", player_right_health);
+        let health_left_message = format!("Health: {}", player_left_health);
+        draw_text(&health_left_message, 8.0, 60.0, 30.0, RED);
+        draw_text(&health_right_message, 640.0, 60.0, 30.0, RED);
     }
 }
