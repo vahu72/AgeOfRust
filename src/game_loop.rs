@@ -1,43 +1,101 @@
-pub mod gui;
-pub mod keyboard;
-pub mod player;
+extern crate timer;
+extern crate chrono;
 
 use std::sync::mpsc;
 use std::thread;
+use crate::game_loop::player::Side;
 
-pub fn game_loop_start() -> (thread::JoinHandle<()>, mpsc::Sender<String>) {
-    //Starting the keyboard module
-  //  let (keyboard_handler, keyboard_sender) = keyboard::keyboard_start();
+mod gui;
+mod keyboard;
+mod player;
 
-    //Starting the game loop thread
-    let (sender, receiver) = mpsc::channel();
-    let thread_handler = thread::spawn(|| {
-        run(receiver);
-    });
-    (thread_handler, sender)
-}
-pub fn game_loop_stop(handler: thread::JoinHandle<()>, sender: &mpsc::Sender<String>) {
-    sender.send("stop".to_string()).unwrap();
-    handler.join().unwrap();
+const REFRESH_PERIOD: i64 = 1000; //ms
+
+pub enum MessageType {
+    Update,
+    Stop,
 }
 
-//pub fn ask_action(sender: &mpsc::Sender<String>) {
-//    sender.send("action asked".to_string()).unwrap();
-//}
-fn run(receiver: mpsc::Receiver<String>) {
-    //Doing something
-    println!("Module actif is now actif");
-    let mut is_running = true;
-    let mut message;
-    while is_running {
-        message = receiver.recv().unwrap();
+pub struct GameLoop {
+    timer: timer::Timer,
+    handler: Option<thread::JoinHandle<()>>,
+    guard: Option<timer::Guard>,
+    player_left: player::Player,
+    player_right: player::Player,
+    sender: mpsc::Sender<MessageType>,
+}
 
-        if message == "action asked" {
-            println!("Module actif is doing asked action");
+impl GameLoop {
+    pub fn new() -> (Self, mpsc::Receiver<MessageType>) {
+        //creation of the mq
+        let (sender, receiver) = mpsc::channel::<MessageType>();
+        let receiver = receiver;
+        (GameLoop {
+            timer: timer::Timer::new(),
+            handler: None,
+            guard: None,
+            player_left: player::Player::new(Side::Left),
+            player_right: player::Player::new(Side::Right),
+            sender,
+        },
+         receiver)
+    }
+
+    pub fn start(&mut self, receiver: mpsc::Receiver<MessageType>)
+    {
+        let sender = self.sender.clone();
+        println!("Timer fired!");
+        let guard = self.timer.schedule_repeating(chrono::Duration::milliseconds(REFRESH_PERIOD), move || {
+            sender.send(MessageType::Update).unwrap();
+        });
+        self.guard = Some(guard);
+
+        let player_left_clone = self.player_left.clone();
+        let player_right_clone = self.player_right.clone();
+
+        // sleep
+        //start thread
+        self.handler = Some(thread::spawn(|| {
+            GameLoop::run(player_left_clone, player_right_clone, receiver);
+        }));
+    }
+
+    pub fn stop(&mut self) {
+        self.sender.send(MessageType::Stop).unwrap();
+        if self.handler.is_some() {
+            if let Some(thread) = self.handler.take() {
+                let _ = thread.join();
+            }
+            // Cleanup the timer after stopping the thread
+            if let Some(guard) = self.guard.take() {
+                drop(guard);
+            }
         }
-        else if message == "stop" {
-            println!("Module actif is asked to stop");
-            is_running = false;
+    }
+
+    fn run(_player_left: player::Player, _player_right: player::Player, receiver: mpsc::Receiver<MessageType>) {
+        let mut is_running = true;
+        while is_running {
+            match receiver.try_recv() {
+                Ok(message) => {
+                    match message {
+                        MessageType::Update => {
+                            println!("ouais trop cool ca update bien \n");
+                        }
+                        MessageType::Stop => {
+                            println!("... non trop nul ca fonctionne pas \n");
+                            is_running = false;
+                        }
+                    }
+                }
+                Err(mpsc::TryRecvError::Disconnected) => {
+                    println!("Receiver is disconnected, exiting.");
+                    is_running = false;
+                }
+                Err(mpsc::TryRecvError::Empty) => {
+                    // No message received, continue running
+                }
+            }
         }
     }
 

@@ -1,9 +1,13 @@
 pub mod entity;
+use std::clone::Clone;
 
+#[derive(Clone)]
 pub enum Side {
     Left,
     Right,
 }
+
+#[derive(Clone)]
 pub struct Player {
     pub money: i32,
     pub side: Side,

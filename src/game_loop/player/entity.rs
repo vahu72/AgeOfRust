@@ -1,11 +1,15 @@
+use std::clone::Clone;
 
 
 #[derive(PartialEq)]
+#[derive(Clone)]
 pub enum Direction {
     Left,
     Right,
 }
 #[derive(PartialEq)]
+
+#[derive(Clone)]
 pub struct Entity {
     health : i32,
     damage : i32,
