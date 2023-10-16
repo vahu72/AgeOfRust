@@ -1,11 +1,14 @@
 use std::ops::Deref;
-
+use std::clone::Clone;
 mod entity;
 
+#[derive(Clone)]
 pub enum Side {
     Left,
     Right,
 }
+
+#[derive(Clone)]
 pub struct Player {
     pub money: i32,
     pub side: Side,

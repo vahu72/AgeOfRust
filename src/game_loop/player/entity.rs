@@ -1,11 +1,13 @@
+use std::clone::Clone;
 
 
-
+#[derive(Clone)]
 pub enum Direction {
     Left,
     Right,
 }
 
+#[derive(Clone)]
 pub struct Entity {
     health : i32,
     damage : i32,
