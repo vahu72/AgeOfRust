@@ -10,14 +10,14 @@ async fn main() {
     let mut last_right_spawn_time : f64 = 0.0;
 
     // Créez un canal pour envoyer des événements de clavier et souris
-    let (sender, receiver) = std::sync::mpsc::channel::<macroquad::input::KeyCode>();
+    let (sender, receiver) = std::sync::mpsc::channel::<KeyCode>();
     let observer = game_loop::keyboard::KeyboardObserver::new(sender);
     observer.start_observer();
 
     // Gérer l'affichage graphique
 
     let graphics_manager = game_loop::gui::GraphicsManager::new().await;
-    let mut graphics_manager = match graphics_manager {
+    let graphics_manager = match graphics_manager {
         Some(game_manager) => game_manager,
         None => return,
     };
@@ -25,7 +25,7 @@ async fn main() {
     println!("Starting loop");
     loop {
         clear_background(WHITE);
-        let current_time = macroquad::time::get_time();
+        let current_time = get_time();
 
         if let Ok(key_code) = receiver.try_recv() {
             if key_code == KeyCode::Escape {
@@ -36,7 +36,7 @@ async fn main() {
                 println!("Space pressed");
                 running_game = true;
             }
-            else if key_code == KeyCode::Left && running_game == true {
+            else if key_code == KeyCode::Left && running_game {
                 let elapsed_time = current_time - last_left_spawn_time;
                 if elapsed_time >= 1.0 {
                     player_left.create_entity(150, 100, game_loop::player::entity::Direction::Right, 100, 150, 1, 100);
@@ -44,7 +44,7 @@ async fn main() {
                 }
 
             }
-            else if key_code == KeyCode::Right && running_game == true {
+            else if key_code == KeyCode::Right && running_game {
                 let elapsed_time = current_time - last_right_spawn_time;
                 if elapsed_time >= 1.0 {
                     player_right.create_entity(100, 100, game_loop::player::entity::Direction::Left, 100, 150, 1, 685);
@@ -54,17 +54,9 @@ async fn main() {
             }
         }
 
-        if running_game == false {
-            // Dessinez la texture du titre
-            graphics_manager.draw_title();
-        } else {
-            // Dessinez la texture d'arrière-plan
+        if running_game {
             graphics_manager.draw_background_game();
-
-            // Affichez la monnaie des deux joueurs
             graphics_manager.draw_money(player_right.money, player_left.money);
-
-            // Affichez les points de vie des deux joueurs
             graphics_manager.draw_health(player_right.health, player_left.health);
 
             // Dessinez les entités des deux joueurs
@@ -79,7 +71,7 @@ async fn main() {
                     // MAJ de la monnaie du joueur
                     player_left.money += left_entity.get_revenue();
                     // MAJ de la vie du joueur adverse
-                    if(player_right.health >= left_entity.get_damage()) {
+                    if player_right.health >= left_entity.get_damage() {
                         player_right.health -= left_entity.get_damage();
                     } else {
                         player_right.health = 0;
@@ -100,7 +92,7 @@ async fn main() {
                     // MAJ de la monnaie du joueur
                     player_right.money += right_entity.get_revenue();
                     // MAJ de la vie du joueur adverse
-                    if(player_left.health >= right_entity.get_damage()) {
+                    if player_left.health >= right_entity.get_damage() {
                         player_left.health -= right_entity.get_damage();
                     } else {
                         player_left.health = 0;
@@ -120,10 +112,10 @@ async fn main() {
                         left_entity.set_health(left_entity.get_health() - right_entity.get_damage());
                         right_entity.set_health(right_entity.get_health() - left_entity.get_damage());
                         // MAJ de la monnaie des deux joueurs
-                        if (left_entity.get_health() <= 0) {
+                        if left_entity.get_health() <= 0 {
                             player_right.money += left_entity.get_revenue();
                         }
-                        if (right_entity.get_health() <= 0) {
+                        if right_entity.get_health() <= 0 {
                             player_left.money += right_entity.get_revenue();
                         }
                     }
@@ -132,7 +124,7 @@ async fn main() {
 
             player_left.entities.retain_mut(|entity_left| {
                 let mut to_retain = true;
-                if (entity_left.get_health() <= 0) {
+                if entity_left.get_health() <= 0 {
                     to_retain = false;
                 }
                 to_retain
@@ -140,15 +132,17 @@ async fn main() {
 
             player_right.entities.retain_mut(|entity_right| {
                 let mut to_retain = true;
-                if (entity_right.get_health() <= 0) {
+                if entity_right.get_health() <= 0 {
                     to_retain = false;
                 }
                 to_retain
             });
 
-            if (player_right.get_health() <= 0 || player_left.get_health() <= 0)  {
+            if player_right.get_health() <= 0 || player_left.get_health() <= 0  {
                 running_game = false;
             }
+        } else {
+            graphics_manager.draw_title();
         }
         next_frame().await;
     }

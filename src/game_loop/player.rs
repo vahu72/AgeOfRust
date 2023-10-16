@@ -1,5 +1,3 @@
-use std::ops::Deref;
-
 pub mod entity;
 
 pub enum Side {
@@ -17,7 +15,7 @@ impl Player {
     pub fn new(side : Side) -> Player {
         Player {
             money: 250,
-            side : side,
+            side,
             health: 1000,
             entities: Vec::new(),
         }
@@ -56,8 +54,10 @@ impl Player {
         None
     }
 
+    // Too many arguments : autorisé car vu avec M. JOUAULT
+    #[allow(clippy::too_many_arguments)]
     pub fn create_entity(&mut self, health : i32, damage : i32, direction : entity::Direction, cost : i32, revenue : i32, speed : i32, position : i32) {
-        if(self.money >= cost) {
+        if self.money >= cost {
             self.entities.push(entity::Entity::new(health, damage, direction, cost, revenue, speed, position));
             self.money -= cost;
         }

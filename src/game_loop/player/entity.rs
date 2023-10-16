@@ -19,13 +19,13 @@ pub struct Entity {
 impl Entity {
     pub fn new(health : i32, damage : i32, direction : Direction, cost : i32, revenue : i32, speed : i32, position : i32) -> Entity {
         Entity {
-            health : health,
-            damage : damage,
-            direction : direction,
-            cost : cost,
-            revenue : revenue,
-            speed : speed,
-            position : position,
+            health,
+            damage,
+            direction,
+            cost,
+            revenue,
+            speed,
+            position,
         }
     }
     pub fn get_health(&self) -> i32 {

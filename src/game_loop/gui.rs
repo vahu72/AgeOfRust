@@ -27,7 +27,6 @@ impl GraphicsManager {
     }
 
     pub fn draw_title(&self) {
-        // Dessinez la texture du titre
         macroquad::prelude::draw_texture_ex(
             self.main_menu,
             0.0,
@@ -41,7 +40,6 @@ impl GraphicsManager {
     }
 
     pub fn draw_background_game(&self) {
-        // Dessinez la texture d'arrière-plan
         macroquad::prelude::draw_texture_ex(
             self.game_background,
             0.0,
@@ -55,26 +53,22 @@ impl GraphicsManager {
     }
 
     pub fn draw_entity(&self, side : bool, position : f32) {
-        if (side == true) {
-            // Dessinez un rectangle rouge à gauche de l'écran dans le cas du joueur de gauche
+        if side {
             draw_rectangle(position, 505.0, 12.0, 50.0, RED);
         }
         else {
-            // Dessinez un rectangle vert à droite de l'écran dans le cas du joueur de droite
             draw_rectangle(position, 505.0, 12.0, 50.0, BLUE);
         }
     }
 
     pub fn draw_money(&self, player_right_money : i32, player_left_money : i32) {
-        // Affichez la monnaie des deux joueurs
-        let money_right_message = format!("Money: {}$", player_right_money);
-        let money_left_message= format!("Money: {}$", player_left_money);
+        let money_right_message = format!("Money: ${}", player_right_money);
+        let money_left_message= format!("Money: ${}", player_left_money);
         draw_text(&money_left_message, 10.0, 30.0, 30.0, BLACK);
         draw_text(&money_right_message, 650.0, 30.0, 30.0, BLACK);
     }
 
     pub fn draw_health(&self, player_right_health : i32, player_left_health: i32) {
-        // Affichez la monnaie des deux joueurs
         let health_right_message = format!("Health: {}", player_right_health);
         let health_left_message = format!("Health: {}", player_left_health);
         draw_text(&health_left_message, 8.0, 60.0, 30.0, RED);

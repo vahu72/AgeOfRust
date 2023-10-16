@@ -5,15 +5,13 @@ use std::thread::{JoinHandle, sleep};
 use std::sync::mpsc::{Sender};
 use macroquad::input::{is_key_down, KeyCode};
 use std::time::{Duration, Instant};
-use std::sync::mpsc;
-//use crate::keyboard::key_game::KeyGame;
 
 pub struct KeyboardObserver {
     sender: Arc<Mutex<Sender<KeyCode>>>,
     running: Arc<AtomicBool<>>,
 }
 
-#[derive(Copy, Clone)] // Ajoutez cette dérivation pour le trait Copy
+#[derive(Copy, Clone)]
 pub struct KeyGame {
     pub key: KeyCode,
     pressed: bool,
