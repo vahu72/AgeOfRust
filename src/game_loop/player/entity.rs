@@ -8,7 +8,6 @@ pub enum Direction {
     Right,
 }
 #[derive(PartialEq)]
-
 #[derive(Clone)]
 pub struct Entity {
     health : i32,
