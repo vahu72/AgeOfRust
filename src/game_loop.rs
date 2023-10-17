@@ -121,7 +121,7 @@ impl GameLoop {
                             let mut player_left = player_left.lock().unwrap();
                             let mut player_right = player_right.lock().unwrap();
                             // Dessinez les entités des deux joueurs
-                            for left_entity in player_left.entities.iter_mut() {
+                            /*for left_entity in player_left.entities.iter_mut() {
                                 left_entity.set_position(left_entity.get_position() + left_entity.get_speed());
 
                                 // Collision entre une entité du joueur de gauche et la base adverse
@@ -138,9 +138,10 @@ impl GameLoop {
                                         player_right.health = 0;
                                     }
                                 }
-                            }
 
-                            for right_entity in player_right.entities.iter_mut() {
+                            }*/
+
+                            /*for right_entity in player_right.entities.iter_mut() {
                                 right_entity.set_position(right_entity.get_position() - right_entity.get_speed());
 
                                 // Collision entre une entité du joueur de droite et la base adverse
@@ -157,7 +158,29 @@ impl GameLoop {
                                         player_left.health = 0;
                                     }
                                 }
+                            }*/
+                            let (is_attacked, revenue) = player_left.check_colision_with_adversary_base(685);
+                            if is_attacked
+                            {
+                                println!("Collision avec la base de droite");
+                                // MAJ de la vie de l'entité concernée
+                                player_left.decrease_life(100);
+                                // MAJ de la monnaie du joueur
+                                player_left.money += revenue;
+                                // MAJ de la vie du joueur adverse
+                                player_right.decrease_life(100);
+                            }
 
+                            let (is_attacked, revenue) = player_right.check_colision_with_adversary_base(100);
+                            if is_attacked
+                            {
+                                println!("Collision avec la base de gauche");
+                                // MAJ de la vie de l'entité concernée
+                                player_right.decrease_life(100);
+                                // MAJ de la monnaie du joueur
+                                player_right.money += revenue;
+                                // MAJ de la vie du joueur adverse
+                                player_left.decrease_life(100);
                             }
 
                             GameLoop::check_collision_entities(&mut player_left, &mut player_right);

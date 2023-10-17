@@ -93,14 +93,16 @@ impl Player {
         }
     }
 
-    pub fn check_colision_with_adversary_base(&self, player: Player, base_position: i32) -> bool {
-        for entity in player.entities.iter() {
+    pub fn check_colision_with_adversary_base(&mut self, base_position: i32) -> (bool, i32) {
+        for entity in self.entities.iter_mut() {
             if base_position - entity.get_position() > 0 && *entity.get_direction() == entity::Direction::Left ||
                 base_position - entity.get_position() < 0 && *entity.get_direction() == entity::Direction::Right
             {
-                return true;
+                let entity_revenue = entity.get_revenue();
+                //self.remove_entity(entity);
+                return (true, entity_revenue);
             }
         }
-        false
+        (false, 0)
     }
 }
