@@ -1,7 +1,7 @@
 extern crate timer;
 extern crate chrono;
 
-use std::sync::mpsc;
+use std::sync::{Arc, mpsc, Mutex};
 use std::thread;
 use macroquad::time::get_time;
 use macroquad::prelude::*;
@@ -25,8 +25,8 @@ pub struct GameLoop {
     timer: timer::Timer,
     handler: Option<thread::JoinHandle<()>>,
     guard: Option<timer::Guard>,
-    player_left: player::Player,
-    player_right: player::Player,
+    player_left: Arc<Mutex<player::Player>>,
+    player_right: Arc<Mutex<player::Player>>,
     sender: mpsc::Sender<MessageType>,
     //gui : gui::GraphicsManager,
 }
@@ -42,8 +42,8 @@ impl GameLoop {
             timer: timer::Timer::new(),
             handler: None,
             guard: None,
-            player_left: player::Player::new(Side::Left),
-            player_right: player::Player::new(Side::Right),
+            player_left: Arc::new(Mutex::new(player::Player::new(Side::Left))),
+            player_right: Arc::new(Mutex::new(player::Player::new(Side::Right))),
             sender,
             //gui: graphics_manager,
         },
@@ -67,6 +67,16 @@ impl GameLoop {
         self.handler = Some(thread::spawn(|| {
             GameLoop::run(player_left_clone, player_right_clone, receiver);
         }));
+    }
+
+    pub fn get_player_left(&self) -> player::Player {
+        let player_left = self.player_left.lock().unwrap();
+        player_left.clone()
+    }
+
+    pub fn get_player_right(&self) -> player::Player {
+        let player_right = self.player_right.lock().unwrap();
+        player_right.clone()
     }
 
     pub fn stop(&mut self) {
@@ -98,7 +108,7 @@ impl GameLoop {
         self.sender.send(MessageType::StopGame).unwrap();
     }
 
-    fn run(mut player_left: player::Player, mut player_right: player::Player, receiver: mpsc::Receiver<MessageType>) {
+    fn run(player_left: Arc<Mutex<player::Player>>, player_right: Arc<Mutex<player::Player>>, receiver: mpsc::Receiver<MessageType>) {
         let mut is_running = true;
         let mut last_left_spawn_time : f64 = 0.0;
         let mut last_right_spawn_time : f64 = 0.0;
@@ -107,10 +117,9 @@ impl GameLoop {
                 Ok(message) => {
                     match message {
                         MessageType::Update => {
-                            //gui.draw_background_game();
-                            //gui.draw_money(player_right.money, player_left.money);
-                            //gui.draw_health(player_right.health, player_left.health);
-
+                            // locking mutexes
+                            let mut player_left = player_left.lock().unwrap();
+                            let mut player_right = player_right.lock().unwrap();
                             // Dessinez les entités des deux joueurs
                             for left_entity in player_left.entities.iter_mut() {
                                 left_entity.set_position(left_entity.get_position() + left_entity.get_speed());
@@ -121,7 +130,7 @@ impl GameLoop {
                                     // MAJ de la vie de l'entité concernée
                                     left_entity.set_health(0);
                                     // MAJ de la monnaie du joueur
-                                    player_left.money += left_entity.get_revenue();
+                                    //player_left.money += left_entity.get_revenue(); //FIXME:
                                     // MAJ de la vie du joueur adverse
                                     if player_right.health >= left_entity.get_damage() {
                                         player_right.health -= left_entity.get_damage();
@@ -129,8 +138,6 @@ impl GameLoop {
                                         player_right.health = 0;
                                     }
                                 }
-
-                                //gui.draw_entity(true, left_entity.get_position() as f32);
                             }
 
                             for right_entity in player_right.entities.iter_mut() {
@@ -142,7 +149,7 @@ impl GameLoop {
                                     // MAJ de la vie de l'entité concernée
                                     right_entity.set_health(0);
                                     // MAJ de la monnaie du joueur
-                                    player_right.money += right_entity.get_revenue();
+                                    //player_right.money += right_entity.get_revenue(); //FIXME:
                                     // MAJ de la vie du joueur adverse
                                     if player_left.health >= right_entity.get_damage() {
                                         player_left.health -= right_entity.get_damage();
@@ -151,7 +158,6 @@ impl GameLoop {
                                     }
                                 }
 
-                              //  gui.draw_entity(false, right_entity.get_position() as f32);
                             }
 
                             GameLoop::check_collision_entities(&mut player_left, &mut player_right);
@@ -191,7 +197,7 @@ impl GameLoop {
                             let current_time = get_time();
                             let elapsed_time = current_time - last_left_spawn_time;
                             if elapsed_time >= 1.0 {
-
+                                let mut player_left = player_left.lock().unwrap();
                                 player_left.create_entity(150, 100, player::entity::Direction::Right, 100, 150, 1, 100);
                                 last_left_spawn_time = current_time;
                             }
@@ -201,6 +207,7 @@ impl GameLoop {
                             let current_time = get_time();
                             let elapsed_time = current_time - last_right_spawn_time;
                             if elapsed_time >= 1.0 {
+                                let mut player_right = player_right.lock().unwrap();
                                 player_right.create_entity(100, 100, player::entity::Direction::Left, 100, 150, 1, 685);
                                 last_right_spawn_time = current_time;
                             }
@@ -215,9 +222,6 @@ impl GameLoop {
                     // No message received, continue running
                 }
             }
-     //   clear_background(WHITE);
-
-        //gui.draw_background_game();
         }
     }
 
