@@ -5,6 +5,7 @@ use std::sync::{Arc, mpsc, Mutex};
 use std::thread;
 use macroquad::time::get_time;
 use macroquad::prelude::*;
+use crate::game_loop::player::entity::ENTITY_SPEED;
 use crate::game_loop::player::Side;
 
 pub mod keyboard;
@@ -221,7 +222,7 @@ impl GameLoop {
                             let elapsed_time = current_time - last_left_spawn_time;
                             if elapsed_time >= 1.0 {
                                 let mut player_left = player_left.lock().unwrap();
-                                player_left.create_entity(150, 100, player::entity::Direction::Right, 100, 150, 1, 100);
+                                player_left.create_entity(150, 100, player::entity::Direction::Right, 100, 150, ENTITY_SPEED);
                                 last_left_spawn_time = current_time;
                             }
                         }
@@ -231,7 +232,7 @@ impl GameLoop {
                             let elapsed_time = current_time - last_right_spawn_time;
                             if elapsed_time >= 1.0 {
                                 let mut player_right = player_right.lock().unwrap();
-                                player_right.create_entity(100, 100, player::entity::Direction::Left, 100, 150, 1, 685);
+                                player_right.create_entity(100, 100, player::entity::Direction::Left, 100, 150, ENTITY_SPEED);
                                 last_right_spawn_time = current_time;
                             }
                         }

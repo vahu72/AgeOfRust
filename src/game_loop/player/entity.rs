@@ -1,6 +1,10 @@
 use std::clone::Clone;
 
 
+pub const ENTITY_LEFT_POSITION: i32 = 140;
+pub const ENTITY_RIGHT_POSITION: i32 = 1120;
+pub const ENTITY_SPEED: i32 = 100;
+
 #[derive(PartialEq)]
 #[derive(Clone)]
 pub enum Direction {

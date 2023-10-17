@@ -1,5 +1,6 @@
 pub mod entity;
 use std::clone::Clone;
+use crate::game_loop::player::entity::{ENTITY_LEFT_POSITION, ENTITY_RIGHT_POSITION};
 
 #[derive(Clone)]
 pub enum Side {
@@ -60,8 +61,12 @@ impl Player {
 
     // Too many arguments : autorisé car vu avec M. JOUAULT
     #[allow(clippy::too_many_arguments)]
-    pub fn create_entity(&mut self, health : i32, damage : i32, direction : entity::Direction, cost : i32, revenue : i32, speed : i32, position : i32) {
+    pub fn create_entity(&mut self, health : i32, damage : i32, direction : entity::Direction, cost : i32, revenue : i32, speed : i32) {
+        let mut position : i32 = ENTITY_RIGHT_POSITION;
         if self.money >= cost {
+            if direction == entity::Direction::Right {
+                position = ENTITY_LEFT_POSITION;
+                }
             self.entities.push(entity::Entity::new(health, damage, direction, cost, revenue, speed, position));
             self.money -= cost;
         }
