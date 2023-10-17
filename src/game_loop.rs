@@ -44,6 +44,8 @@ impl GameLoop {
         //creation of the mq
         let (sender, receiver) = mpsc::channel::<MessageType>();
         let receiver = receiver;
+
+        println!("GameLoop new");
         (GameLoop {
             timer: timer::Timer::new(),
             handler: None,
@@ -59,8 +61,9 @@ impl GameLoop {
     pub fn start(&mut self, receiver: mpsc::Receiver<MessageType>)
     {
         let sender = self.sender.clone();
-        println!("Timer fired!");
+        println!("GameLoop start!");
         let guard = self.timer.schedule_repeating(chrono::Duration::milliseconds(REFRESH_PERIOD), move || {
+            //println!("Timer ticked!");
             sender.send(MessageType::Update).unwrap();
         });
         self.guard = Some(guard);
@@ -113,9 +116,10 @@ impl GameLoop {
             match receiver.try_recv() {
                 Ok(message) => {
                     match message {
-                        MessageType::Update => {gui.draw_background_game();
-                          //  gui.draw_money(player_right.money, player_left.money);
-                           // gui.draw_health(player_right.health, player_left.health);
+                        MessageType::Update => {
+                            gui.draw_background_game();
+                            gui.draw_money(player_right.money, player_left.money);
+                            gui.draw_health(player_right.health, player_left.health);
 
                             // Dessinez les entités des deux joueurs
                             for left_entity in player_left.entities.iter_mut() {
@@ -187,6 +191,9 @@ impl GameLoop {
                             is_running = false;
                         }
                         MessageType::StartGame => {
+                            println!("Espace pressed");
+                        }
+                        MessageType::StopGame => {
                             println!("Escape pressed");
                         }
                         MessageType::CreateEntityLeft => {
@@ -208,10 +215,6 @@ impl GameLoop {
                                 last_right_spawn_time = current_time;
                             }
                         }
-                        MessageType::StopGame => {
-                            println!("Space pressed");
-                        }
-
                     }
                 }
                 Err(mpsc::TryRecvError::Disconnected) => {
@@ -225,7 +228,6 @@ impl GameLoop {
      //   clear_background(WHITE);
 
         //gui.draw_background_game();
-        //next_frame();
         }
     }
 

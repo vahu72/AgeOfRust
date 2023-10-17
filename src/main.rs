@@ -16,24 +16,26 @@ async fn main() {
     let observer = game_loop::keyboard::KeyboardObserver::new(sender_keyboard);
     observer.start_observer();
 
+
     loop {
         if let Ok(key_code) = receiver_keyboard.try_recv() {
             if key_code == KeyCode::Escape {
-            //    println!("Escape pressed");
+                println!("Escape pressed");
                 gameloop.stop_game();
             } else if key_code == KeyCode::Space {
-                //println!("Space pressed");
+                println!("Space pressed");
                 gameloop.start_game();
             } else if key_code == KeyCode::Left {
-                //println!("Left pressed");
+                println!("Left pressed");
                 gameloop.create_entity_left();
             } else if key_code == KeyCode::Right {
-                //println!("Right pressed");
+                println!("Right pressed");
                 gameloop.create_entity_right();
             }
         }
-        next_frame().await;
+    next_frame().await;
     }
+
 }
     /*
 

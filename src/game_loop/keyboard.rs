@@ -50,7 +50,7 @@ impl KeyboardObserver {
         let mut key_pressed: Option<KeyCode> = None;
         for key_games in keys_games.iter() {
             if key_games.is_key_pressed(){
-                println!("Key pressed: {:?}", key_games.key);
+              //  println!("Key pressed: {:?}", key_games.key);
                 key_pressed = Some(key_games.key);
                 break;
             }
@@ -59,7 +59,7 @@ impl KeyboardObserver {
         if let Some(key) = key_pressed {
             let send_status_lock = sender.lock();
 
-            println!("Key pressed: {:?}", key);
+        //    println!("Key pressed: {:?}", key);
 
             match send_status_lock {
                 Ok(send_status) => {
