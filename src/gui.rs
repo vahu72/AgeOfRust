@@ -2,7 +2,8 @@ use macroquad::prelude::{load_texture, Texture2D};
 use macroquad::prelude::{draw_rectangle, draw_text, RED, BLUE, BLACK};
 use std::clone::Clone;
 
-#[derive(Clone)]
+use crate::game_loop::player::Player;
+#[derive(Clone, Copy)]
 pub struct GraphicsManager {
     pub main_menu: Texture2D,
     pub game_background: Texture2D,
@@ -55,7 +56,7 @@ impl GraphicsManager {
         );
     }
 
-    pub fn draw_entity(&self, side : bool, position : f32) {
+    fn draw_entity(&self, side : bool, position : f32) {
         if side {
             draw_rectangle(position, 505.0, 12.0, 50.0, RED);
         }
@@ -64,17 +65,29 @@ impl GraphicsManager {
         }
     }
 
-    pub fn draw_money(&self, player_right_money : i32, player_left_money : i32) {
+    fn draw_money(&self, player_right_money : i32, player_left_money : i32) {
         let money_right_message = format!("Money: ${}", player_right_money);
         let money_left_message= format!("Money: ${}", player_left_money);
         draw_text(&money_left_message, 10.0, 30.0, 30.0, BLACK);
         draw_text(&money_right_message, 650.0, 30.0, 30.0, BLACK);
     }
 
-    pub fn draw_health(&self, player_right_health : i32, player_left_health: i32) {
+    fn draw_health(&self, player_right_health : i32, player_left_health: i32) {
         let health_right_message = format!("Health: {}", player_right_health);
         let health_left_message = format!("Health: {}", player_left_health);
         draw_text(&health_left_message, 8.0, 60.0, 30.0, RED);
         draw_text(&health_right_message, 640.0, 60.0, 30.0, RED);
+    }
+
+    pub fn update(&mut self, player_left : Player, player_right : Player) {
+        self.draw_background_game();
+        self.draw_money(player_right.money, player_left.money);
+        self.draw_health(player_right.health, player_left.health);
+        for entity in player_left.entities.iter() {
+            self.draw_entity(true, entity.get_position() as f32);
+        }
+        for entity in player_right.entities.iter() {
+            self.draw_entity(false, entity.get_position() as f32);
+        }
     }
 }

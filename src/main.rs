@@ -2,6 +2,7 @@ mod game_loop;
 pub mod gui;
 use macroquad::prelude::*;
 use crate::game_loop::{GameLoop};
+use crate::game_loop::player::Player;
 
 
 pub const WINDOW_WIDTH: i32 = 1280;
@@ -25,46 +26,41 @@ async fn main() {
         None => todo!(),
     };
 
+    let mut is_running = false;
+    let mut player_left = Player::new(game_loop::player::Side::Left);
+    let mut player_right = Player::new(game_loop::player::Side::Right);
+
     loop {
         if let Ok(key_code) = receiver_keyboard.try_recv() {
             if key_code == KeyCode::Escape {
                 println!("Escape pressed");
+                is_running = false;
                 gameloop.stop_game();
             } else if key_code == KeyCode::Space {
                 println!("Space pressed");
+                is_running = true;
                 gameloop.start_game();
-            } else if key_code == KeyCode::Left {
+            } else if key_code == KeyCode::Left && is_running {
                 println!("Left pressed");
                 gameloop.create_entity_left();
-            } else if key_code == KeyCode::Right {
+            } else if key_code == KeyCode::Right && is_running {
                 println!("Right pressed");
                 gameloop.create_entity_right();
             }
         }
 
-    graphics_manager.draw_background_game();
+        if is_running {
+            player_left = gameloop.get_player_left();
+            player_right = gameloop.get_player_right();
+            update_game(graphics_manager, player_left.clone(), player_right.clone());
+        } else {
+            graphics_manager.draw_title();
+        }
     next_frame().await;
     }
 
 }
     /*
-
-    let mut running_game = false;
-    let mut player_left = game_loop::player::Player::new(game_loop::player::Side::Left);
-    let mut player_right = game_loop::player::Player::new(game_loop::player::Side::Right);
-    let mut last_left_spawn_time : f64 = 0.0;
-    let mut last_right_spawn_time : f64 = 0.0;
-
-    // Créez un canal pour envoyer des événements de clavier et souris
-
-
-    // Gérer l'affichage graphique
-
-    let graphics_manager = game_loop::gui::GraphicsManager::new().await;
-    let graphics_manager = match graphics_manager {
-        Some(game_manager) => game_manager,
-        None => return,
-    };
 
     // Affichage de la taille de la fenêtre
     println!("Window size: {}x{}", screen_width(), screen_height());
@@ -204,4 +200,8 @@ pub fn window_conf() -> Conf {
         window_resizable: false,
         ..Default::default()
     }
+}
+
+fn update_game(mut graphics_manager: gui::GraphicsManager, player_left: crate::game_loop::player::Player, player_right: Player) {
+    graphics_manager.update(player_left, player_right);
 }
