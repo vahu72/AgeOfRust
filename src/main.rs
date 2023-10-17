@@ -1,22 +1,40 @@
 mod game_loop;
 use macroquad::prelude::*;
-use crate::game_loop::GameLoop;
+use crate::game_loop::{GameLoop, MessageType};
 
 
 pub const WINDOW_WIDTH: i32 = 1280;
 pub const WINDOW_HEIGHT: i32 = 720;
-pub const GAME_NAME: &str = "Rusty Corks";
+pub const GAME_NAME: &str = "Age of Rust";
 
 #[macroquad::main(window_conf)]
 async fn main() {
     let (mut gameloop, receiver) = GameLoop::new().await;
-
     gameloop.start(receiver);
 
-    loop {
-        //waiting ctrl+C
-    }
+    let (sender_keyboard, receiver_keyboard) = std::sync::mpsc::channel::<KeyCode>();
+    let observer = game_loop::keyboard::KeyboardObserver::new(sender_keyboard);
+    observer.start_observer();
 
+    loop {
+        if let Ok(key_code) = receiver_keyboard.try_recv() {
+            if key_code == KeyCode::Escape {
+            //    println!("Escape pressed");
+                gameloop.stop_game();
+            } else if key_code == KeyCode::Space {
+                //println!("Space pressed");
+                gameloop.start_game();
+            } else if key_code == KeyCode::Left {
+                //println!("Left pressed");
+                gameloop.create_entity_left();
+            } else if key_code == KeyCode::Right {
+                //println!("Right pressed");
+                gameloop.create_entity_right();
+            }
+        }
+        next_frame().await;
+    }
+}
     /*
 
     let mut running_game = false;
@@ -26,9 +44,7 @@ async fn main() {
     let mut last_right_spawn_time : f64 = 0.0;
 
     // Créez un canal pour envoyer des événements de clavier et souris
-    let (sender, receiver) = std::sync::mpsc::channel::<KeyCode>();
-    let observer = game_loop::keyboard::KeyboardObserver::new(sender);
-    observer.start_observer();
+
 
     // Gérer l'affichage graphique
 
@@ -166,7 +182,7 @@ async fn main() {
         next_frame().await;
     }
     */
-}
+
 
 pub fn window_conf() -> Conf {
     Conf {

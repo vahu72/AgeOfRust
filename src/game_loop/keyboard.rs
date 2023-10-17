@@ -39,6 +39,7 @@ impl KeyGame {
 
 impl KeyboardObserver {
     pub fn new(sender_key: Sender<KeyCode>) -> KeyboardObserver {
+        println!("KeyboardObserver new");
         KeyboardObserver {
             sender: Arc::new(Mutex::new(sender_key)),
             running: Arc::new(AtomicBool::new(true)),
@@ -53,11 +54,12 @@ impl KeyboardObserver {
                 key_pressed = Some(key_games.key);
                 break;
             }
-
         }
 
         if let Some(key) = key_pressed {
             let send_status_lock = sender.lock();
+
+            println!("Key pressed: {:?}", key);
 
             match send_status_lock {
                 Ok(send_status) => {
@@ -88,6 +90,7 @@ impl KeyboardObserver {
             let timer_duration = Duration::from_millis(20);
             let mut last_time = Instant::now();
 
+            println!("KeyboardObserver start_observer");
 
             while running_clone.load(Ordering::Relaxed) {
                 for key_games in &mut keys_games {
