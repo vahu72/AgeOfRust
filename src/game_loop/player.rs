@@ -103,9 +103,9 @@ impl Player {
             if base_position - entity.get_position() > 0 && *entity.get_direction() == entity::Direction::Left ||
                 base_position - entity.get_position() < 0 && *entity.get_direction() == entity::Direction::Right
             {
-                let entity_revenue = entity.get_revenue();
-                //self.remove_entity(entity);
-                return (true, entity_revenue);
+                // MAJ de la vie de l'entité concernée
+                entity.set_health(0);
+                return (true, entity.get_revenue());
             }
         }
         (false, 0)
