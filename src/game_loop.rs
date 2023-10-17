@@ -88,6 +88,18 @@ impl GameLoop {
         }
     }
 
+    pub fn create_entity_left(&mut self) {
+        self.sender.send(MessageType::CreateEntityLeft).unwrap();
+    }
+
+    pub fn create_entity_right(&mut self) {
+        self.sender.send(MessageType::CreateEntityRight).unwrap();
+    }
+
+    pub fn start_game(&mut self) {
+        self.sender.send(MessageType::StartGame).unwrap();
+    }
+
     fn run(mut player_left: player::Player, mut player_right: player::Player, receiver: mpsc::Receiver<MessageType>, gui : gui::GraphicsManager) {
         let mut is_running = true;
         let mut last_left_spawn_time : f64 = 0.0;

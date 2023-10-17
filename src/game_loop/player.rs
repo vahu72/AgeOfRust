@@ -93,5 +93,14 @@ impl Player {
         }
     }
 
-
+    pub fn check_colision_with_adversary_base(&self, player: Player, base_position: i32) -> bool {
+        for entity in player.entities.iter() {
+            if base_position - entity.get_position() > 0 && *entity.get_direction() == entity::Direction::Left ||
+                base_position - entity.get_position() < 0 && *entity.get_direction() == entity::Direction::Right
+            {
+                return true;
+            }
+        }
+        false
+    }
 }
