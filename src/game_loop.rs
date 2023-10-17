@@ -188,7 +188,6 @@ impl GameLoop {
                         }
                         MessageType::StartGame => {
                             println!("Escape pressed");
-                            is_running = false;
                         }
                         MessageType::CreateEntityLeft => {
                             println!("Left pressed");
@@ -211,7 +210,6 @@ impl GameLoop {
                         }
                         MessageType::StopGame => {
                             println!("Space pressed");
-                            is_running = true;
                         }
 
                     }
