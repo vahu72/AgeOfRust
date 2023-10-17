@@ -3,6 +3,15 @@ use macroquad::prelude::{draw_rectangle, draw_text, RED, BLUE, BLACK};
 use std::clone::Clone;
 
 use crate::game_loop::player::Player;
+
+const LEFT_PLAYER_MENU_X : f32 = 10.0;
+const LEFT_PLAYER_MENU_Y : f32 = 30.0;
+const RIGHT_PLAYER_MENU_X : f32 = 1100.0;
+const RIGHT_PLAYER_MENU_Y : f32 = 30.0;
+const ENTITY_WIDTH : f32 = 14.0;
+const ENTITY_HEIGHT : f32 = 58.0;
+const ENTITY_POSITION_Y : f32 = 610.0;
+
 #[derive(Clone, Copy)]
 pub struct GraphicsManager {
     pub main_menu: Texture2D,
@@ -58,25 +67,25 @@ impl GraphicsManager {
 
     fn draw_entity(&self, side : bool, position : f32) {
         if side {
-            draw_rectangle(position, 505.0, 12.0, 50.0, RED);
+            draw_rectangle(position, ENTITY_POSITION_Y, ENTITY_WIDTH, ENTITY_HEIGHT, RED);
         }
         else {
-            draw_rectangle(position, 505.0, 12.0, 50.0, BLUE);
+            draw_rectangle(position, ENTITY_POSITION_Y, ENTITY_WIDTH, ENTITY_HEIGHT, BLUE);
         }
     }
 
     fn draw_money(&self, player_right_money : i32, player_left_money : i32) {
         let money_right_message = format!("Money: ${}", player_right_money);
         let money_left_message= format!("Money: ${}", player_left_money);
-        draw_text(&money_left_message, 10.0, 30.0, 30.0, BLACK);
-        draw_text(&money_right_message, 650.0, 30.0, 30.0, BLACK);
+        draw_text(&money_left_message, LEFT_PLAYER_MENU_X, LEFT_PLAYER_MENU_Y, 30.0, BLACK);
+        draw_text(&money_right_message, RIGHT_PLAYER_MENU_X, RIGHT_PLAYER_MENU_Y, 30.0, BLACK);
     }
 
     fn draw_health(&self, player_right_health : i32, player_left_health: i32) {
         let health_right_message = format!("Health: {}", player_right_health);
         let health_left_message = format!("Health: {}", player_left_health);
-        draw_text(&health_left_message, 8.0, 60.0, 30.0, RED);
-        draw_text(&health_right_message, 640.0, 60.0, 30.0, RED);
+        draw_text(&health_left_message, LEFT_PLAYER_MENU_X - 2.0, 2.0 * RIGHT_PLAYER_MENU_Y, 30.0, RED);
+        draw_text(&health_right_message, RIGHT_PLAYER_MENU_X - 2.0, 2.0 * RIGHT_PLAYER_MENU_Y, 30.0, RED);
     }
 
     pub fn update(&mut self, player_left : Player, player_right : Player) {
