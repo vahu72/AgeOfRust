@@ -1,6 +1,7 @@
 mod game_loop;
+pub mod gui;
 use macroquad::prelude::*;
-use crate::game_loop::{GameLoop, MessageType};
+use crate::game_loop::{GameLoop};
 
 
 pub const WINDOW_WIDTH: i32 = 1280;
@@ -16,6 +17,13 @@ async fn main() {
     let observer = game_loop::keyboard::KeyboardObserver::new(sender_keyboard);
     observer.start_observer();
 
+    //creation of gui
+    let graphics_manager = gui::GraphicsManager::new().await;
+    let graphics_manager = match graphics_manager {
+        Some(game_manager) => game_manager,
+        // TODO : Gestion erreur
+        None => todo!(),
+    };
 
     loop {
         if let Ok(key_code) = receiver_keyboard.try_recv() {
@@ -33,6 +41,8 @@ async fn main() {
                 gameloop.create_entity_right();
             }
         }
+
+    graphics_manager.draw_background_game();
     next_frame().await;
     }
 

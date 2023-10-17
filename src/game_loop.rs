@@ -7,7 +7,6 @@ use macroquad::time::get_time;
 use macroquad::prelude::*;
 use crate::game_loop::player::Side;
 
-pub mod gui;
 pub mod keyboard;
 pub mod player;
 
@@ -29,18 +28,11 @@ pub struct GameLoop {
     player_left: player::Player,
     player_right: player::Player,
     sender: mpsc::Sender<MessageType>,
-    gui : gui::GraphicsManager,
+    //gui : gui::GraphicsManager,
 }
 
 impl GameLoop {
     pub async fn new() -> (Self, mpsc::Receiver<MessageType>) {
-        //creation of gui
-        let graphics_manager = gui::GraphicsManager::new();
-        let graphics_manager = match graphics_manager.await {
-            Some(game_manager) => game_manager,
-            // TODO : Gestion erreur
-            None => todo!(),
-        };
         //creation of the mq
         let (sender, receiver) = mpsc::channel::<MessageType>();
         let receiver = receiver;
@@ -53,7 +45,7 @@ impl GameLoop {
             player_left: player::Player::new(Side::Left),
             player_right: player::Player::new(Side::Right),
             sender,
-            gui: graphics_manager,
+            //gui: graphics_manager,
         },
          receiver)
     }
@@ -70,12 +62,10 @@ impl GameLoop {
 
         let player_left_clone = self.player_left.clone();
         let player_right_clone = self.player_right.clone();
-        let gui_clone = self.gui.clone();
-
         // sleep
         //start thread
         self.handler = Some(thread::spawn(|| {
-            GameLoop::run(player_left_clone, player_right_clone, receiver, gui_clone);
+            GameLoop::run(player_left_clone, player_right_clone, receiver);
         }));
     }
 
@@ -108,7 +98,7 @@ impl GameLoop {
         self.sender.send(MessageType::StopGame).unwrap();
     }
 
-    fn run(mut player_left: player::Player, mut player_right: player::Player, receiver: mpsc::Receiver<MessageType>, gui : gui::GraphicsManager) {
+    fn run(mut player_left: player::Player, mut player_right: player::Player, receiver: mpsc::Receiver<MessageType>) {
         let mut is_running = true;
         let mut last_left_spawn_time : f64 = 0.0;
         let mut last_right_spawn_time : f64 = 0.0;
@@ -117,9 +107,9 @@ impl GameLoop {
                 Ok(message) => {
                     match message {
                         MessageType::Update => {
-                            gui.draw_background_game();
-                            gui.draw_money(player_right.money, player_left.money);
-                            gui.draw_health(player_right.health, player_left.health);
+                            //gui.draw_background_game();
+                            //gui.draw_money(player_right.money, player_left.money);
+                            //gui.draw_health(player_right.health, player_left.health);
 
                             // Dessinez les entités des deux joueurs
                             for left_entity in player_left.entities.iter_mut() {
