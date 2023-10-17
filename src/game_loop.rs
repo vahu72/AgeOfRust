@@ -3,17 +3,22 @@ extern crate chrono;
 
 use std::sync::mpsc;
 use std::thread;
+use macroquad::time::get_time;
+use macroquad::prelude::*;
 use crate::game_loop::player::Side;
 
-mod gui;
-mod keyboard;
-mod player;
+pub mod gui;
+pub mod keyboard;
+pub mod player;
 
 const REFRESH_PERIOD: i64 = 1000; //ms
 
 pub enum MessageType {
     Update,
     Stop,
+    StartGame,
+    CreateEntityRight,
+    CreateEntityLeft,
 }
 
 pub struct GameLoop {
@@ -23,10 +28,18 @@ pub struct GameLoop {
     player_left: player::Player,
     player_right: player::Player,
     sender: mpsc::Sender<MessageType>,
+    gui : gui::GraphicsManager,
 }
 
 impl GameLoop {
-    pub fn new() -> (Self, mpsc::Receiver<MessageType>) {
+    pub async fn new() -> (Self, mpsc::Receiver<MessageType>) {
+        //creation of gui
+        let graphics_manager = gui::GraphicsManager::new();
+        let graphics_manager = match graphics_manager.await {
+            Some(game_manager) => game_manager,
+            // TODO : Gestion erreur
+            None => todo!(),
+        };
         //creation of the mq
         let (sender, receiver) = mpsc::channel::<MessageType>();
         let receiver = receiver;
@@ -37,6 +50,7 @@ impl GameLoop {
             player_left: player::Player::new(Side::Left),
             player_right: player::Player::new(Side::Right),
             sender,
+            gui: graphics_manager,
         },
          receiver)
     }
@@ -52,11 +66,12 @@ impl GameLoop {
 
         let player_left_clone = self.player_left.clone();
         let player_right_clone = self.player_right.clone();
+        let gui_clone = self.gui.clone();
 
         // sleep
         //start thread
         self.handler = Some(thread::spawn(|| {
-            GameLoop::run(player_left_clone, player_right_clone, receiver);
+            GameLoop::run(player_left_clone, player_right_clone, receiver, gui_clone);
         }));
     }
 
@@ -73,19 +88,129 @@ impl GameLoop {
         }
     }
 
-    fn run(_player_left: player::Player, _player_right: player::Player, receiver: mpsc::Receiver<MessageType>) {
+    fn run(mut player_left: player::Player, mut player_right: player::Player, receiver: mpsc::Receiver<MessageType>, gui : gui::GraphicsManager) {
         let mut is_running = true;
+        let mut last_left_spawn_time : f64 = 0.0;
+        let mut last_right_spawn_time : f64 = 0.0;
         while is_running {
             match receiver.try_recv() {
                 Ok(message) => {
                     match message {
-                        MessageType::Update => {
-                            println!("ouais trop cool ca update bien \n");
+                        MessageType::Update => {gui.draw_background_game();
+                          //  gui.draw_money(player_right.money, player_left.money);
+                           // gui.draw_health(player_right.health, player_left.health);
+
+                            // Dessinez les entités des deux joueurs
+                            for left_entity in player_left.entities.iter_mut() {
+                                left_entity.set_position(left_entity.get_position() + left_entity.get_speed());
+
+                                // Collision entre une entité du joueur de gauche et la base adverse
+                                if left_entity.get_position() == 685 {
+                                    println!("Collision avec la base de droite");
+                                    // MAJ de la vie de l'entité concernée
+                                    left_entity.set_health(0);
+                                    // MAJ de la monnaie du joueur
+                                    player_left.money += left_entity.get_revenue();
+                                    // MAJ de la vie du joueur adverse
+                                    if player_right.health >= left_entity.get_damage() {
+                                        player_right.health -= left_entity.get_damage();
+                                    } else {
+                                        player_right.health = 0;
+                                    }
+                                }
+
+                                //gui.draw_entity(true, left_entity.get_position() as f32);
+                            }
+
+                            for right_entity in player_right.entities.iter_mut() {
+                                right_entity.set_position(right_entity.get_position() - right_entity.get_speed());
+
+                                // Collision entre une entité du joueur de droite et la base adverse
+                                if right_entity.get_position() == 100 {
+                                    println!("Collision avec la base de gauche");
+                                    // MAJ de la vie de l'entité concernée
+                                    right_entity.set_health(0);
+                                    // MAJ de la monnaie du joueur
+                                    player_right.money += right_entity.get_revenue();
+                                    // MAJ de la vie du joueur adverse
+                                    if player_left.health >= right_entity.get_damage() {
+                                        player_left.health -= right_entity.get_damage();
+                                    } else {
+                                        player_left.health = 0;
+                                    }
+                                }
+
+                              //  gui.draw_entity(false, right_entity.get_position() as f32);
+                            }
+
+                            for left_entity in player_left.entities.iter_mut() {
+                                for right_entity in player_right.entities.iter_mut() {
+
+                                    // Collision entre deux entités
+                                    if (left_entity.get_position() - right_entity.get_position()).abs() <= 1 {
+                                        println!("Collision");
+                                        // MAJ de la vie des deux entités
+                                        left_entity.set_health(left_entity.get_health() - right_entity.get_damage());
+                                        right_entity.set_health(right_entity.get_health() - left_entity.get_damage());
+                                        // MAJ de la monnaie des deux joueurs
+                                        if left_entity.get_health() <= 0 {
+                                            player_right.money += left_entity.get_revenue();
+                                        }
+                                        if right_entity.get_health() <= 0 {
+                                            player_left.money += right_entity.get_revenue();
+                                        }
+                                    }
+                                }
+                            }
+
+                            player_left.entities.retain_mut(|entity_left| {
+                                let mut to_retain = true;
+                                if entity_left.get_health() <= 0 {
+                                    to_retain = false;
+                                }
+                                to_retain
+                            });
+
+                            player_right.entities.retain_mut(|entity_right| {
+                                let mut to_retain = true;
+                                if entity_right.get_health() <= 0 {
+                                    to_retain = false;
+                                }
+                                to_retain
+                            });
+
+                            if player_right.get_health() <= 0 || player_left.get_health() <= 0  {
+                                println!("game ended !")
+                            }
                         }
                         MessageType::Stop => {
                             println!("... non trop nul ca fonctionne pas \n");
                             is_running = false;
                         }
+                        MessageType::StartGame => {
+                            println!("Escape pressed");
+                            is_running = false;
+                        }
+                        MessageType::CreateEntityLeft => {
+                            println!("Left pressed");
+                            let current_time = get_time();
+                            let elapsed_time = current_time - last_left_spawn_time;
+                            if elapsed_time >= 1.0 {
+
+                                player_left.create_entity(150, 100, player::entity::Direction::Right, 100, 150, 1, 100);
+                                last_left_spawn_time = current_time;
+                            }
+                        }
+                        MessageType::CreateEntityRight => {
+                            println!("Right pressed");
+                            let current_time = get_time();
+                            let elapsed_time = current_time - last_right_spawn_time;
+                            if elapsed_time >= 1.0 {
+                                player_right.create_entity(100, 100, player::entity::Direction::Left, 100, 150, 1, 685);
+                                last_right_spawn_time = current_time;
+                            }
+                        }
+
                     }
                 }
                 Err(mpsc::TryRecvError::Disconnected) => {
@@ -96,6 +221,10 @@ impl GameLoop {
                     // No message received, continue running
                 }
             }
+     //   clear_background(WHITE);
+
+        //gui.draw_background_game();
+        //next_frame();
         }
     }
 

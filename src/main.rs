@@ -1,8 +1,24 @@
 mod game_loop;
 use macroquad::prelude::*;
+use crate::game_loop::GameLoop;
 
-#[macroquad::main("Background Image Example", window_conf)]
+
+pub const WINDOW_WIDTH: i32 = 1280;
+pub const WINDOW_HEIGHT: i32 = 720;
+pub const GAME_NAME: &str = "Rusty Corks";
+
+#[macroquad::main(window_conf)]
 async fn main() {
+    let (mut gameloop, receiver) = GameLoop::new().await;
+
+    gameloop.start(receiver);
+
+    loop {
+        //waiting ctrl+C
+    }
+
+    /*
+
     let mut running_game = false;
     let mut player_left = game_loop::player::Player::new(game_loop::player::Side::Left);
     let mut player_right = game_loop::player::Player::new(game_loop::player::Side::Right);
@@ -21,6 +37,9 @@ async fn main() {
         Some(game_manager) => game_manager,
         None => return,
     };
+
+    // Affichage de la taille de la fenêtre
+    println!("Window size: {}x{}", screen_width(), screen_height());
 
     println!("Starting loop");
     loop {
@@ -145,5 +164,16 @@ async fn main() {
             graphics_manager.draw_title();
         }
         next_frame().await;
+    }
+    */
+}
+
+pub fn window_conf() -> Conf {
+    Conf {
+        window_title: GAME_NAME.to_string(),
+        window_width: WINDOW_WIDTH,
+        window_height: WINDOW_HEIGHT,
+        window_resizable: false,
+        ..Default::default()
     }
 }

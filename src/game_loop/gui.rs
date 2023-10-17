@@ -1,5 +1,8 @@
 use macroquad::prelude::{load_texture, Texture2D};
 use macroquad::prelude::{draw_rectangle, draw_text, RED, BLUE, BLACK};
+use std::clone::Clone;
+
+#[derive(Clone)]
 pub struct GraphicsManager {
     pub main_menu: Texture2D,
     pub game_background: Texture2D,
