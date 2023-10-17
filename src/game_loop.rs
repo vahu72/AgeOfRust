@@ -16,6 +16,7 @@ const REFRESH_PERIOD: i64 = 1000; //ms
 pub enum MessageType {
     Update,
     Stop,
+    StopGame,
     StartGame,
     CreateEntityRight,
     CreateEntityLeft,
@@ -100,6 +101,10 @@ impl GameLoop {
         self.sender.send(MessageType::StartGame).unwrap();
     }
 
+    pub fn stop_game(&mut self) {
+        self.sender.send(MessageType::StopGame).unwrap();
+    }
+
     fn run(mut player_left: player::Player, mut player_right: player::Player, receiver: mpsc::Receiver<MessageType>, gui : gui::GraphicsManager) {
         let mut is_running = true;
         let mut last_left_spawn_time : f64 = 0.0;
@@ -155,25 +160,7 @@ impl GameLoop {
                               //  gui.draw_entity(false, right_entity.get_position() as f32);
                             }
 
-                            for left_entity in player_left.entities.iter_mut() {
-                                for right_entity in player_right.entities.iter_mut() {
-
-                                    // Collision entre deux entités
-                                    if (left_entity.get_position() - right_entity.get_position()).abs() <= 1 {
-                                        println!("Collision");
-                                        // MAJ de la vie des deux entités
-                                        left_entity.set_health(left_entity.get_health() - right_entity.get_damage());
-                                        right_entity.set_health(right_entity.get_health() - left_entity.get_damage());
-                                        // MAJ de la monnaie des deux joueurs
-                                        if left_entity.get_health() <= 0 {
-                                            player_right.money += left_entity.get_revenue();
-                                        }
-                                        if right_entity.get_health() <= 0 {
-                                            player_left.money += right_entity.get_revenue();
-                                        }
-                                    }
-                                }
-                            }
+                            GameLoop::check_collision_entities(&mut player_left, &mut player_right);
 
                             player_left.entities.retain_mut(|entity_left| {
                                 let mut to_retain = true;
@@ -222,6 +209,10 @@ impl GameLoop {
                                 last_right_spawn_time = current_time;
                             }
                         }
+                        MessageType::StopGame => {
+                            println!("Space pressed");
+                            is_running = true;
+                        }
 
                     }
                 }
@@ -240,4 +231,25 @@ impl GameLoop {
         }
     }
 
+    fn check_collision_entities(player_left: &mut player::Player, player_right: &mut player::Player) {
+        for left_entity in player_left.entities.iter_mut() {
+            for right_entity in player_right.entities.iter_mut() {
+
+                // Collision entre deux entités
+                if (left_entity.get_position() - right_entity.get_position()).abs() <= 1 {
+                    println!("Collision");
+                    // MAJ de la vie des deux entités
+                    left_entity.set_health(left_entity.get_health() - right_entity.get_damage());
+                    right_entity.set_health(right_entity.get_health() - left_entity.get_damage());
+                    // MAJ de la monnaie des deux joueurs
+                    if left_entity.get_health() <= 0 {
+                        player_right.money += left_entity.get_revenue();
+                    }
+                    if right_entity.get_health() <= 0 {
+                        player_left.money += right_entity.get_revenue();
+                    }
+                }
+            }
+        }
+    }
 }
