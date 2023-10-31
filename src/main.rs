@@ -1,4 +1,5 @@
 mod game_loop;
+mod config;
 pub mod gui;
 use macroquad::prelude::*;
 use crate::game_loop::{GameLoop};

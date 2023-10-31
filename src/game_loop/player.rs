@@ -1,7 +1,9 @@
 pub mod entity;
-use std::clone::Clone;
-use crate::game_loop::player::entity::{ENTITY_LEFT_POSITION, ENTITY_RIGHT_POSITION};
 
+use crate::config::{BASE_LEFT_POSITION, BASE_RIGHT_POSITION, ENTITY_SPEED};
+use std::clone::Clone;
+
+#[derive(PartialEq)]
 #[derive(Clone)]
 pub enum Side {
     Left,
@@ -61,13 +63,16 @@ impl Player {
 
     // Too many arguments : autorisé car vu avec M. JOUAULT
     #[allow(clippy::too_many_arguments)]
-    pub fn create_entity(&mut self, health : i32, damage : i32, direction : entity::Direction, cost : i32, revenue : i32, speed : i32) {
-        let mut position : i32 = ENTITY_RIGHT_POSITION;
+    pub fn create_entity(&mut self, health : i32, damage : i32, cost : i32, revenue : i32) {
+        let position : i32;
         if self.money >= cost {
-            if direction == entity::Direction::Right {
-                position = ENTITY_LEFT_POSITION;
-                }
-            self.entities.push(entity::Entity::new(health, damage, direction, cost, revenue, speed, position));
+            if self.side == Side::Right {
+                position = BASE_RIGHT_POSITION;
+            }
+            else {
+                position = BASE_LEFT_POSITION;
+            }
+            self.entities.push(entity::Entity::new(health, damage, cost, revenue, ENTITY_SPEED, position));
             self.money -= cost;
         }
     }
@@ -80,7 +85,6 @@ impl Player {
         self.health -= amount;
         if self.health < 0 {
             self.health = 0;
-            //TODO: notify death
         }
     }
 
@@ -98,10 +102,10 @@ impl Player {
         }
     }
 
-    pub fn check_colision_with_adversary_base(&mut self, base_position: i32) -> (bool, i32) {
+    pub fn check_colision_with_adversary_base(&mut self) -> (bool, i32) {
         for entity in self.entities.iter_mut() {
-            if base_position - entity.get_position() > 0 && *entity.get_direction() == entity::Direction::Left ||
-                base_position - entity.get_position() < 0 && *entity.get_direction() == entity::Direction::Right
+            if BASE_LEFT_POSITION - entity.get_position() > 0 && self.side == Side::Right ||
+                BASE_RIGHT_POSITION - entity.get_position() < 0 && self.side == Side::Left
             {
                 // MAJ de la vie de l'entité concernée
                 entity.set_health(0);

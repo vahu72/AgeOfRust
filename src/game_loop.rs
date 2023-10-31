@@ -5,7 +5,6 @@ use std::sync::{Arc, mpsc, Mutex};
 use std::thread;
 use macroquad::time::get_time;
 use macroquad::prelude::*;
-use crate::game_loop::player::entity::ENTITY_SPEED;
 use crate::game_loop::player::Side;
 
 pub mod keyboard;
@@ -131,28 +130,11 @@ impl GameLoop {
                             });
 
                             // Verification des collisions avec la base
-                            let (is_attacked, revenue) = player_left.check_colision_with_adversary_base(685);
-                            if is_attacked
-                            {
-                                println!("Collision avec la base de droite");
-                                // MAJ de la monnaie du joueur
-                                player_left.money += revenue;
-                                // MAJ de la vie du joueur adverse
-                                player_right.decrease_life(100);
-                            }
-
-                            let (is_attacked, revenue) = player_right.check_colision_with_adversary_base(100);
-                            if is_attacked
-                            {
-                                println!("Collision avec la base de gauche");
-                                // MAJ de la monnaie du joueur
-                                player_right.money += revenue;
-                                // MAJ de la vie du joueur adverse
-                                player_left.decrease_life(100);
-                            }
+                            check_collision_adversary_base(&mut player_left, &mut player_right);
+                            check_collision_adversary_base(&mut player_right, &mut player_left);
 
                             //verification des collisions entre entités
-                            GameLoop::check_collision_entities(&mut player_left, &mut player_right);
+                            check_collision_entities(&mut player_left, &mut player_right);
 
                             player_left.entities.retain_mut(|entity_left| {
                                 let mut to_retain = true;
@@ -187,9 +169,9 @@ impl GameLoop {
                             println!("Left pressed");
                             let current_time = get_time();
                             let elapsed_time = current_time - last_left_spawn_time;
-                            if elapsed_time >= 1.0 {
+                            if elapsed_time >= 0.5 {
                                 let mut player_left = player_left.lock().unwrap();
-                                player_left.create_entity(150, 100, player::entity::Direction::Right, 100, 150, ENTITY_SPEED);
+                                player_left.create_entity(150, 100,  100, 150);
                                 last_left_spawn_time = current_time;
                             }
                         }
@@ -197,9 +179,9 @@ impl GameLoop {
                             println!("Right pressed");
                             let current_time = get_time();
                             let elapsed_time = current_time - last_right_spawn_time;
-                            if elapsed_time >= 1.0 {
+                            if elapsed_time >= 0.5 {
                                 let mut player_right = player_right.lock().unwrap();
-                                player_right.create_entity(100, 100, player::entity::Direction::Left, 100, 150, ENTITY_SPEED);
+                                player_right.create_entity(100, 100, 100, 150);
                                 last_right_spawn_time = current_time;
                             }
                         }
@@ -215,24 +197,35 @@ impl GameLoop {
             }
         }
     }
+}
 
-    fn check_collision_entities(player_left: &mut player::Player, player_right: &mut player::Player) {
-        for left_entity in player_left.entities.iter_mut() {
-            for right_entity in player_right.entities.iter_mut() {
+fn check_collision_adversary_base(defenser: &mut player::Player, attacker: &mut player::Player) {
+    let (is_attacked, revenue) = attacker.check_colision_with_adversary_base();
+    if is_attacked
+    {
+        // MAJ de la monnaie du joueur
+        attacker.money += revenue;
+        // MAJ de la vie du joueur adverse
+        defenser.decrease_life(100);
+    }
+}
 
-                // Collision entre deux entités
-                if (left_entity.get_position() - right_entity.get_position()).abs() <= 3 {
-                    println!("Collision");
-                    // MAJ de la vie des deux entités
-                    left_entity.set_health(left_entity.get_health() - right_entity.get_damage());
-                    right_entity.set_health(right_entity.get_health() - left_entity.get_damage());
-                    // MAJ de la monnaie des deux joueurs
-                    if left_entity.get_health() <= 0 {
-                        player_right.money += left_entity.get_revenue();
-                    }
-                    if right_entity.get_health() <= 0 {
-                        player_left.money += right_entity.get_revenue();
-                    }
+fn check_collision_entities(player_left: &mut player::Player, player_right: &mut player::Player) {
+    for left_entity in player_left.entities.iter_mut() {
+        for right_entity in player_right.entities.iter_mut() {
+
+            // Collision entre deux entités
+            if right_entity.get_position() - left_entity.get_position() <= 0 {
+                println!("Collision");
+                // MAJ de la vie des deux entités
+                left_entity.set_health(left_entity.get_health() - right_entity.get_damage());
+                right_entity.set_health(right_entity.get_health() - left_entity.get_damage());
+                // MAJ de la monnaie des deux joueurs
+                if left_entity.get_health() <= 0 {
+                    player_right.money += left_entity.get_revenue();
+                }
+                if right_entity.get_health() <= 0 {
+                    player_left.money += right_entity.get_revenue();
                 }
             }
         }

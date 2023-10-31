@@ -1,22 +1,10 @@
 use std::clone::Clone;
 
-
-pub const ENTITY_LEFT_POSITION: i32 = 140;
-pub const ENTITY_RIGHT_POSITION: i32 = 1120;
-pub const ENTITY_SPEED: i32 = 100;
-
-#[derive(PartialEq)]
-#[derive(Clone)]
-pub enum Direction {
-    Left,
-    Right,
-}
 #[derive(PartialEq)]
 #[derive(Clone)]
 pub struct Entity {
     health : i32,
     damage : i32,
-    direction : Direction,
     cost : i32,
     revenue : i32,
     speed : i32,
@@ -24,11 +12,10 @@ pub struct Entity {
 }
 
 impl Entity {
-    pub fn new(health : i32, damage : i32, direction : Direction, cost : i32, revenue : i32, speed : i32, position : i32) -> Entity {
+    pub fn new(health : i32, damage : i32, cost : i32, revenue : i32, speed : i32, position : i32) -> Entity {
         Entity {
             health,
             damage,
-            direction,
             cost,
             revenue,
             speed,
@@ -41,10 +28,6 @@ impl Entity {
 
     pub fn get_damage(&self) -> i32 {
         self.damage
-    }
-
-    pub fn get_direction(&self) -> &Direction {
-        &self.direction
     }
 
     pub fn get_cost(&self) -> i32 {
