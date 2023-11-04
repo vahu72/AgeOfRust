@@ -5,6 +5,7 @@ use std::sync::{Arc, mpsc, Mutex};
 use std::thread;
 use macroquad::time::get_time;
 use macroquad::prelude::*;
+use crate::game_loop::player::entity::Entity;
 use crate::game_loop::player::Side;
 
 pub mod keyboard;
@@ -121,39 +122,8 @@ impl GameLoop {
                             let mut player_left = player_left.lock().unwrap();
                             let mut player_right = player_right.lock().unwrap();
 
-                            // Incrementation de la position des entités des deux joueurs
-                            player_left.entities.iter_mut().for_each(|left_entity| {
-                                left_entity.set_position(left_entity.get_position() + left_entity.get_speed());
-                            });
-                            player_right.entities.iter_mut().for_each(|right_entity| {
-                                right_entity.set_position(right_entity.get_position() - right_entity.get_speed());
-                            });
+                            update_game(&mut player_left, &mut player_right);
 
-                            // Verification des collisions avec la base
-                            check_collision_adversary_base(&mut player_left, &mut player_right);
-                            check_collision_adversary_base(&mut player_right, &mut player_left);
-
-                            //verification des collisions entre entités
-                            check_collision_entities(&mut player_left, &mut player_right);
-
-                            player_left.entities.retain_mut(|entity_left| {
-                                let mut to_retain = true;
-                                if entity_left.get_health() <= 0 {
-                                    to_retain = false;
-                                }
-                                to_retain
-                            });
-                            player_right.entities.retain_mut(|entity_right| {
-                                let mut to_retain = true;
-                                if entity_right.get_health() <= 0 {
-                                    to_retain = false;
-                                }
-                                to_retain
-                            });
-
-                            if player_right.get_health() <= 0 || player_left.get_health() <= 0  {
-                                println!("game ended !")
-                            }
                         }
                         MessageType::Stop => {
                             println!("... non trop nul ca fonctionne pas \n");
@@ -199,6 +169,42 @@ impl GameLoop {
     }
 }
 
+fn update_game(player1: &mut player::Player, player2: &mut player::Player) {
+    // Incrementation de la position des entités des deux joueurs
+    player1.fighters.iter_mut().for_each(|entity_player1| {
+        entity_player1.set_position(entity_player1.get_position() + entity_player1.get_speed());
+    });
+    player2.fighters.iter_mut().for_each(|entity_player2| {
+        entity_player2.set_position(entity_player2.get_position() - entity_player2.get_speed());
+    });
+
+    // Verification des collisions avec la base
+    check_collision_adversary_base(player1, player2);
+    check_collision_adversary_base(player2, player1);
+
+    //verification des collisions entre entités
+    check_collision_entities(player1, player2);
+
+    player1.fighters.retain_mut(|entity_player1| {
+        let mut to_retain = true;
+        if entity_player1.get_health() <= 0 {
+            to_retain = false;
+        }
+        to_retain
+    });
+    player2.fighters.retain_mut(|entity_player2| {
+        let mut to_retain = true;
+        if entity_player2.get_health() <= 0 {
+            to_retain = false;
+        }
+        to_retain
+    });
+
+    if player2.get_health() <= 0 || player1.get_health() <= 0  {
+        println!("game ended !")
+    }
+}
+
 fn check_collision_adversary_base(defenser: &mut player::Player, attacker: &mut player::Player) {
     let (is_attacked, revenue) = attacker.check_colision_with_adversary_base();
     if is_attacked
@@ -211,8 +217,8 @@ fn check_collision_adversary_base(defenser: &mut player::Player, attacker: &mut 
 }
 
 fn check_collision_entities(player_left: &mut player::Player, player_right: &mut player::Player) {
-    for left_entity in player_left.entities.iter_mut() {
-        for right_entity in player_right.entities.iter_mut() {
+    for left_entity in player_left.fighters.iter_mut() {
+        for right_entity in player_right.fighters.iter_mut() {
 
             // Collision entre deux entités
             if right_entity.get_position() - left_entity.get_position() <= 0 {

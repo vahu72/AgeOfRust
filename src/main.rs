@@ -28,8 +28,8 @@ async fn main() {
     };
 
     let mut is_running = false;
-    let mut player_left = Player::new(game_loop::player::Side::Left);
-    let mut player_right = Player::new(game_loop::player::Side::Right);
+    let mut player_left;
+    let mut player_right;
 
     loop {
         if let Ok(key_code) = receiver_keyboard.try_recv() {

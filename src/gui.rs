@@ -1,6 +1,7 @@
 use macroquad::prelude::{load_texture, Texture2D};
 use macroquad::prelude::{draw_rectangle, draw_text, RED, BLUE, BLACK};
 use std::clone::Clone;
+use crate::game_loop::player::entity::Entity;
 
 use crate::game_loop::player::Player;
 
@@ -92,10 +93,10 @@ impl GraphicsManager {
         self.draw_background_game();
         self.draw_money(player_right.money, player_left.money);
         self.draw_health(player_right.health, player_left.health);
-        for entity in player_left.entities.iter() {
+        for entity in player_left.fighters.iter() {
             self.draw_entity(true, entity.get_position() as f32);
         }
-        for entity in player_right.entities.iter() {
+        for entity in player_right.fighters.iter() {
             self.draw_entity(false, entity.get_position() as f32);
         }
     }

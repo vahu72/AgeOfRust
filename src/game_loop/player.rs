@@ -2,6 +2,7 @@ pub mod entity;
 
 use crate::config::{BASE_LEFT_POSITION, BASE_RIGHT_POSITION, ENTITY_SPEED};
 use std::clone::Clone;
+use crate::game_loop::player::entity::Entity;
 
 #[derive(PartialEq)]
 #[derive(Clone)]
@@ -15,7 +16,7 @@ pub struct Player {
     pub money: i32,
     pub side: Side,
     pub health: i32,
-    pub entities: Vec<entity::Entity>,
+    pub fighters: Vec<entity::Fighter>,
 }
 
 impl Player {
@@ -24,7 +25,7 @@ impl Player {
             money: 250,
             side,
             health: 1000,
-            entities: Vec::new(),
+            fighters: Vec::new(),
         }
     }
 
@@ -40,21 +41,21 @@ impl Player {
         &self.side
     }
 
-    pub fn get_entities(&mut self) -> &mut Vec<entity::Entity> {
-        &mut self.entities
+    pub fn get_entities(&mut self) -> &mut Vec<entity::Fighter> {
+        &mut self.fighters
     }
 
-    pub fn get_entity(&self, index : usize) -> &entity::Entity {
-        &self.entities[index]
+    pub fn get_entity(&self, index : usize) -> &entity::Fighter {
+        &self.fighters[index]
     }
 
     pub fn get_entity_count(&self) -> usize {
-        self.entities.len()
+        self.fighters.len()
     }
 
     pub fn get_entity_index_by_position(&self, position : i32) -> Option<usize> {
-        for (index, entity) in self.entities.iter().enumerate() {
-            if entity.get_position() == position {
+        for (index, fighter) in self.fighters.iter().enumerate() {
+            if fighter.get_position() == position {
                 return Some(index);
             }
         }
@@ -72,13 +73,13 @@ impl Player {
             else {
                 position = BASE_LEFT_POSITION;
             }
-            self.entities.push(entity::Entity::new(health, damage, cost, revenue, ENTITY_SPEED, position));
+            self.fighters.push(entity::Fighter::new(health, damage, cost, revenue, ENTITY_SPEED, position));
             self.money -= cost;
         }
     }
 
-    pub fn remove_entity(&mut self, entity_to_remove : &entity::Entity) {
-        self.entities.retain(|entity| entity != entity_to_remove);
+    pub fn remove_entity(&mut self, entity_to_remove : &entity::Fighter) {
+        self.fighters.retain(|entity| entity != entity_to_remove);
     }
 
     pub fn decrease_life(&mut self, amount: i32) {
@@ -103,13 +104,13 @@ impl Player {
     }
 
     pub fn check_colision_with_adversary_base(&mut self) -> (bool, i32) {
-        for entity in self.entities.iter_mut() {
-            if BASE_LEFT_POSITION - entity.get_position() > 0 && self.side == Side::Right ||
-                BASE_RIGHT_POSITION - entity.get_position() < 0 && self.side == Side::Left
+        for fighter in self.fighters.iter_mut() {
+            if BASE_LEFT_POSITION - fighter.get_position() > 0 && self.side == Side::Right ||
+                BASE_RIGHT_POSITION - fighter.get_position() < 0 && self.side == Side::Left
             {
                 // MAJ de la vie de l'entité concernée
-                entity.set_health(0);
-                return (true, entity.get_revenue());
+                fighter.set_health(0);
+                return (true, fighter.get_revenue());
             }
         }
         (false, 0)
