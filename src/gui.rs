@@ -21,8 +21,8 @@ pub struct GraphicsManager {
 
 impl GraphicsManager {
     pub async fn new() -> Option<GraphicsManager> {
-        let main_menu = load_texture("flash_age_of_war_screenshot.png").await;
-        let game_background = load_texture("ageofwar.png").await;
+        let main_menu = load_texture("main_menu.png").await;
+        let game_background = load_texture("background.png").await;
 
         match (main_menu, game_background) {
             (Ok(main_menu), Ok(game_background)) => Some(GraphicsManager {
@@ -30,11 +30,11 @@ impl GraphicsManager {
                 game_background,
             }),
             (Err(_), _) => {
-                println!("Error loading texture: flash_age_of_war_screenshot.png");
+                println!("Error loading texture: main_menu.png");
                 None
             }
             (_, Err(_)) => {
-                println!("Error loading texture: ageofwar.png");
+                println!("Error loading texture: background.png");
                 None
             }
         }
@@ -92,7 +92,7 @@ impl GraphicsManager {
     pub fn update(&mut self, player_left : Player, player_right : Player) {
         self.draw_background_game();
         self.draw_money(player_right.money, player_left.money);
-        self.draw_health(player_right.health, player_left.health);
+        self.draw_health(player_right.base.health, player_left.base.health);
         for entity in player_left.fighters.iter() {
             self.draw_entity(true, entity.get_position() as f32);
         }

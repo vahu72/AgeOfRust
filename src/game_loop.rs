@@ -29,16 +29,14 @@ pub struct GameLoop {
     player_left: Arc<Mutex<player::Player>>,
     player_right: Arc<Mutex<player::Player>>,
     sender: mpsc::Sender<MessageType>,
-    //gui : gui::GraphicsManager,
 }
 
 impl GameLoop {
-    pub async fn new() -> (Self, mpsc::Receiver<MessageType>) {
+    pub fn new() -> (Self, mpsc::Receiver<MessageType>) {
         //creation of the mq
         let (sender, receiver) = mpsc::channel::<MessageType>();
         let receiver = receiver;
 
-        println!("GameLoop new");
         (GameLoop {
             timer: timer::Timer::new(),
             handler: None,
@@ -46,42 +44,61 @@ impl GameLoop {
             player_left: Arc::new(Mutex::new(player::Player::new(Side::Left))),
             player_right: Arc::new(Mutex::new(player::Player::new(Side::Right))),
             sender,
-            //gui: graphics_manager,
         },
          receiver)
     }
 
-    pub fn start(&mut self, receiver: mpsc::Receiver<MessageType>)
-    {
+    pub fn start(&mut self, receiver: mpsc::Receiver<MessageType>) {
         let sender = self.sender.clone();
-        println!("GameLoop start!");
+
         let guard = self.timer.schedule_repeating(chrono::Duration::milliseconds(REFRESH_PERIOD), move || {
-            //println!("Timer ticked!");
-            sender.send(MessageType::Update).unwrap();
+            // Timer ticked, notify game loop
+            let send_result = sender.send(MessageType::Update);
+            if let Err(e) = send_result {
+                println!("Game loop: Error sending Update message: {}", e);
+            }
         });
         self.guard = Some(guard);
 
         let player_left_clone = self.player_left.clone();
         let player_right_clone = self.player_right.clone();
-        // sleep
+
+
         //start thread
         self.handler = Some(thread::spawn(|| {
             GameLoop::run(player_left_clone, player_right_clone, receiver);
         }));
     }
 
-    pub fn get_player_left(&self) -> player::Player {
-        let player_left = self.player_left.lock().unwrap();
-        player_left.clone()
+    pub fn get_player_left(&self) -> Option<player::Player> {
+        let player_left_lock_ret = self.player_left.lock();
+        match player_left_lock_ret {
+            Ok(player_left) =>
+                Some(player_left.clone()),
+            Err(e) => {
+                println!("Error getting player_left: {}", e);
+                None
+            }
+        }
     }
 
-    pub fn get_player_right(&self) -> player::Player {
-        let player_right = self.player_right.lock().unwrap();
-        player_right.clone()
+    pub fn get_player_right(&self) -> Option<player::Player> {
+        let player_right_lock_ret = self.player_right.lock();
+        match player_right_lock_ret {
+            Ok(player_right) =>
+                Some(player_right.clone()),
+            Err(e) => {
+                println!("Error getting player_right: {}", e);
+                None
+            }
+        }
     }
 
     pub fn stop(&mut self) {
-        self.sender.send(MessageType::Stop).unwrap();
+        let send_result = self.sender.send(MessageType::Stop);
+        if let Err(e) = send_result {
+            println!("Game loop: Error sending stop message: {}", e);
+        }
         if self.handler.is_some() {
             if let Some(thread) = self.handler.take() {
                 let _ = thread.join();
@@ -94,64 +111,120 @@ impl GameLoop {
     }
 
     pub fn create_entity_left(&mut self) {
-        self.sender.send(MessageType::CreateEntityLeft).unwrap();
+        let send_result = self.sender.send(MessageType::CreateEntityLeft);
+        if let Err(e) = send_result {
+            println!("Game loop: Error sending stop message: {}", e);
+        }
     }
 
     pub fn create_entity_right(&mut self) {
-        self.sender.send(MessageType::CreateEntityRight).unwrap();
+        let send_result = self.sender.send(MessageType::CreateEntityRight);
+        if let Err(e) = send_result {
+            println!("Game loop: Error sending stop message: {}", e);
+        }
     }
 
     pub fn start_game(&mut self) {
-        self.sender.send(MessageType::StartGame).unwrap();
+        let send_result = self.sender.send(MessageType::StartGame);
+        if let Err(e) = send_result {
+            println!("Game loop: Error sending stop message: {}", e);
+        }
     }
 
     pub fn stop_game(&mut self) {
-        self.sender.send(MessageType::StopGame).unwrap();
+        let send_result = self.sender.send(MessageType::StopGame);
+        if let Err(e) = send_result {
+            println!("Game loop: Error sending stop message: {}", e);
+        }
     }
 
     fn run(player_left: Arc<Mutex<player::Player>>, player_right: Arc<Mutex<player::Player>>, receiver: mpsc::Receiver<MessageType>) {
         let mut is_running = true;
-        let mut last_left_spawn_time : f64 = 0.0;
-        let mut last_right_spawn_time : f64 = 0.0;
+        let mut last_left_spawn_time: f64 = 0.0;
+        let mut last_right_spawn_time: f64 = 0.0;
         while is_running {
             match receiver.try_recv() {
                 Ok(message) => {
                     match message {
                         MessageType::Update => {
                             // locking mutexes
-                            let mut player_left = player_left.lock().unwrap();
-                            let mut player_right = player_right.lock().unwrap();
+                            let player_right_lock_ret = player_right.lock();
+                            let mut player_right = match player_right_lock_ret {
+                                Ok(player_right) =>
+                                   player_right,
+                                Err(e) => {
+                                    println!("Error getting player_right: {}", e);
+                                    break;
+                                }
+                            };
+                            let player_left_lock_ret = player_left.lock();
+                            let mut player_left = match player_left_lock_ret {
+                                Ok(player_left) =>
+                                    player_left,
+                                Err(e) => {
+                                    println!("Error getting player_left: {}", e);
+                                    break;
+                                }
+                            };
 
                             update_game(&mut player_left, &mut player_right);
-
                         }
                         MessageType::Stop => {
-                            println!("... non trop nul ca fonctionne pas \n");
                             is_running = false;
                         }
                         MessageType::StartGame => {
-                            println!("Espace pressed");
+                            // locking mutexes
+                            let player_right_lock_ret = player_right.lock();
+                            let mut player_right = match player_right_lock_ret {
+                                Ok(player_right) =>
+                                    player_right,
+                                Err(e) => {
+                                    println!("Error getting player_right: {}", e);
+                                    break;
+                                }
+                            };
+                            let player_left_lock_ret = player_left.lock();
+                            let mut player_left = match player_left_lock_ret {
+                                Ok(player_left) =>
+                                    player_left,
+                                Err(e) => {
+                                    println!("Error getting player_left: {}", e);
+                                    break;
+                                }
+                            };
+
+                            player_left.reset();
+                            player_right.reset();
                         }
                         MessageType::StopGame => {
-                            println!("Escape pressed");
                         }
                         MessageType::CreateEntityLeft => {
-                            println!("Left pressed");
                             let current_time = get_time();
                             let elapsed_time = current_time - last_left_spawn_time;
                             if elapsed_time >= 0.5 {
-                                let mut player_left = player_left.lock().unwrap();
-                                player_left.create_entity(150, 100,  100, 150);
+                                let lock_ret = player_left.lock();
+                                match lock_ret {
+                                    Ok(mut player_left) =>
+                                        player_left.create_entity(150, 100, 100, 150),
+                                    Err(e) => {
+                                        println!("Error getting player_left: {}", e);
+                                    }
+                                };
                                 last_left_spawn_time = current_time;
                             }
                         }
                         MessageType::CreateEntityRight => {
-                            println!("Right pressed");
                             let current_time = get_time();
                             let elapsed_time = current_time - last_right_spawn_time;
                             if elapsed_time >= 0.5 {
-                                let mut player_right = player_right.lock().unwrap();
-                                player_right.create_entity(100, 100, 100, 150);
+                                let lock_ret = player_right.lock();
+                                match lock_ret {
+                                    Ok(mut player_right) =>
+                                        player_right.create_entity(150, 100, 100, 150),
+                                    Err(e) => {
+                                        println!("Error getting player_right: {}", e);
+                                    }
+                                };
                                 last_right_spawn_time = current_time;
                             }
                         }
@@ -199,10 +272,6 @@ fn update_game(player1: &mut player::Player, player2: &mut player::Player) {
         }
         to_retain
     });
-
-    if player2.get_health() <= 0 || player1.get_health() <= 0  {
-        println!("game ended !")
-    }
 }
 
 fn check_collision_adversary_base(defenser: &mut player::Player, attacker: &mut player::Player) {
