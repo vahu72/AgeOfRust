@@ -99,6 +99,5 @@ pub fn window_conf() -> Conf {
 }
 
 fn update_game(mut graphics_manager: gui::GraphicsManager, player_left: Player, player_right: Player) {
-
     graphics_manager.update(player_left, player_right);
 }

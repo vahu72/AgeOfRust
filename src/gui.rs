@@ -21,11 +21,11 @@ pub struct GraphicsManager {
 
 impl GraphicsManager {
     pub async fn new() -> Option<GraphicsManager> {
-        let main_menu = load_texture("main_menu.png").await;
-        let game_background = load_texture("background.png").await;
+        let main_menu = load_texture("assets/main_menu.png").await;
+        let game_background = load_texture("assets/background.png").await;
 
         match (main_menu, game_background) {
-            (Ok(main_menu), Ok(game_background)) => Some(GraphicsManager {
+            (Ok(main_menu), Ok(game_background  )) => Some(GraphicsManager {
                 main_menu,
                 game_background,
             }),
